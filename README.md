@@ -56,3 +56,8 @@ SafeDrive is a driving assistant mobile application designed to track and analyz
    ```bash
    git clone https://github.com/adlinzahid/SafeDrive.git
 
+## Sequence Diagram
+![Sequence Diagram drawio (1)](https://github.com/user-attachments/assets/f9067d94-cf59-4c5f-a4df-2905f0932428)
+
+
+
