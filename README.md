@@ -9,11 +9,14 @@
 Design an android mobile app that can help drivers improve their driving behaviour using flutter and deploy on Google PlayStore. 
 
 ## Project Objective
-The objective of this application is to improve user's behaviour in driving. SafeDrive app will track and analyse the user's driving by tracking the amount of hardbrakes the drive did because driver does not maintain a good distance with the car in front, and the number of sharp turns done by the driver due to last minute decision and also for speeding. Users can log trips by starting drive and the trip will be analysed for feedbacks.  
+The objective of this application is to improve user's behaviour in driving. SafeDrive app will track and analyse the user's driving by tracking the amount of hardbrakes the drive did because driver does not maintain a good distance with the car in front, and the number of sharp turns done by the driver due to last minute decision and also for speeding. Users can log trips by starting drive and the trip will be analysed for feedbacks. Through this feedback message, user can drive more carefully the next time.
 
 ## Target User
 
-This app target users who drive a car and want to monitor their driving behaviour so that they can improve their driving. This way, users (drivers) can avoid getting fined for speeding or damage their car due to hardbrakes or sharp turns that may harm the car internally or externally. 
+Target users for SafeDrive is someone who wants to monitor their driving behaviour so that they can improve their driving. This way, users (drivers) can avoid getting fined for speeding or damage their car due to hardbrakes or sharp turns that may harm the car internally or externally. 
+
+## Deployment Platform
+SafeDrive will be deployed on Google Playstore. Phone compatibility; all Android(8+) devices that have gps sensor because this app will be utilising the device's sensors.
 
 ---
 
@@ -22,30 +25,29 @@ This app target users who drive a car and want to monitor their driving behaviou
 | **Name**                             | **Matric No** | **Assigned Tasks**                                                                                                                                               |
 |--------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Nur Adlin Binti Muhammad Zahid**   | 2118652       | - Authentication and profile management.                                                                                                                         |
-|                                      |               | - Integration of GPS for route mapping and safe-driving score calculation.                                                                                        |
+|                                      |               | - Sensor integration for accelerometer/gyroscope.                                                                                        |
 |                                      |               | - Backend logic for CRUD operations.                                                                                                                             |
 | **Hannah Sabrina Binti Saiful Bahri**| 2116074       | - UI/UX design for all app screens.                                                                                                                              |
 |                                      |               | - Development of trip logging and review interfaces.                                                                                                             |
 |                                      |               | - Visualization of driving data (e.g., graphs and charts).                                                                                                       |
-| **Nor Hidayati Binti Munadi**        | 2214282       | - Sensor integration for accelerometer/gyroscope.                                                                                                                |
+| **Nor Hidayati Binti Munadi**        | 2214282       | - Integration of GPS for route mapping and safe-driving analysis                                                                                                              |
 |                                      |               | - Detection algorithms for unsafe driving behaviors.                                                                                                             |
 |                                      |               | - Implementation of notifications and alerts for risky habits.                                                                                                   |
-
 
 ---
 
 ## Features
 - **Authentication:**  
-  Manage profiles for drivers, including driving scores and safety insights.
+  Manage profiles for drivers, including driving feedback and safety insights.
   
 - **CRUD Operations:**  
   - Log new trips with details such as date, time, and distance.  
   - Review past trips to analyze performance.  
-  - Update driving goals or delete outdated trip data.
+  - Update profile data or delete outdated trip data.
 
 - **Sensor Integration:**  
   - **Accelerometer/Gyroscope:** Detect unsafe driving behaviors such as hard braking, sudden accelerations, and sharp turns.  
-  - **GPS:** Map routes and calculate safe-driving scores.
+  - **GPS:** Map routes and track driving behaviours.
 
 ---
 
@@ -64,6 +66,16 @@ Identify and document the technical and functional requirements for the SafeDriv
 ### **Scope**
 - Provide a comprehensive understanding of system requirements.
 - Assess technical feasibility and platform compatibility.
+
+### **System Requirements For Development**
+- Flutter >=3.19.0
+- Dart >=3.3.0 <4.0.0
+- iOS >=12.0
+- MacOS >=10.14
+- Android compileSDK 34
+- Java 17
+- Android Gradle Plugin >=8.3.0
+- Gradle wrapper >=8.4
 
 ### **Functional Requirements**
 #### **1. User Authentication**
@@ -130,4 +142,7 @@ Identify and document the technical and functional requirements for the SafeDriv
 
 ## Navigation Flow
 ![mobileapp](https://github.com/user-attachments/assets/932c0837-77c1-4732-ab1e-3d246d1e5d63)
+
+## Gantt Chart for SafeDrive Development
+
 
