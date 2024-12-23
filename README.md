@@ -122,6 +122,3 @@ Identify and document the technical and functional requirements for the SafeDriv
 ## Navigation Flow
 ![mobileapp](https://github.com/user-attachments/assets/932c0837-77c1-4732-ab1e-3d246d1e5d63)
 
----
-## Contribution
-
