@@ -146,5 +146,6 @@ Identify and document the technical and functional requirements for the SafeDriv
 ![mobileapp](https://github.com/user-attachments/assets/932c0837-77c1-4732-ab1e-3d246d1e5d63)
 
 ## Gantt Chart for SafeDrive Development
+![SafeDrive Project Gantt Chart](https://github.com/user-attachments/assets/f6497a79-6079-4d95-bccd-f4337e04d5ce)
 
 
