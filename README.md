@@ -117,6 +117,8 @@ Identify and document the technical and functional requirements for the SafeDriv
 - Built using Flutter to support cross-platform functionality.
 
 #### **Backend**
+- Firebase console for data storage
+  
 | Firebase Service       | Description                             |
 |------------------------|-----------------------------------------|
 | Authentication         | Secure user management.                |
@@ -127,7 +129,7 @@ Identify and document the technical and functional requirements for the SafeDriv
 
 
 #### **Sensor Integration**
-- Utilize `sensors_plus` for accelerometer, gyroscope, and magnetometer data.
+- Utilise `sensors_plus` package in flutter for accelerometer, gyroscope, and magnetometer data.
 - Combine with GPS plugins (e.g., geolocator) for route tracking.
 
 #### **Driving Insights**
