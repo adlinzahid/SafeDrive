@@ -112,14 +112,16 @@ Identify and document the technical and functional requirements for the SafeDriv
 #### **Driving Insights**
 - Generate actionable feedback messages based on aggregated data.
 
-
-## **Screen Navigation Flow**
-![mobileapp](https://github.com/user-attachments/assets/932c0837-77c1-4732-ab1e-3d246d1e5d63)
+---
 
 ## Sequence Diagram
 ![Sequence Diagram drawio (1)](https://github.com/user-attachments/assets/f9067d94-cf59-4c5f-a4df-2905f0932428)
 
-## Navigation Flow
+---
 
+## Navigation Flow
+![mobileapp](https://github.com/user-attachments/assets/932c0837-77c1-4732-ab1e-3d246d1e5d63)
+
+---
 ## Contribution
 
