@@ -47,7 +47,7 @@ SafeDrive is a driving assistant mobile application designed to track and analyz
    ```bash
    git clone https://github.com/adlinzahid/SafeDrive.git
 
-## Requirment Analysis
+## Requirement Analysis
 
 ### **Objective**
 Identify and document the technical and functional requirements for the SafeDrive app.
