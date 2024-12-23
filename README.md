@@ -5,8 +5,15 @@
 
 ---
 
-## Project Overview
-SafeDrive is a driving assistant mobile application designed to track and analyze driving habits to improve road safety. The app leverages sensor data and user feedback to provide actionable insights for safer driving practices.
+## Project Initiation
+Design an android mobile app that can help drivers improve their driving behaviour using flutter and deploy on Google PlayStore. 
+
+## Project Objective
+The objective of this application is to improve user's behaviour in driving. SafeDrive app will track and analyse the user's driving by tracking the amount of hardbrakes the drive did because driver does not maintain a good distance with the car in front, and the number of sharp turns done by the driver due to last minute decision and also for speeding. Users can log trips by starting drive and the trip will be analysed for feedbacks.  
+
+## Target User
+
+This app target users who drive a car and want to monitor their driving behaviour so that they can improve their driving. This way, users (drivers) can avoid getting fined for speeding or damage their car due to hardbrakes or sharp turns that may harm the car internally or externally. 
 
 ---
 
@@ -46,6 +53,8 @@ SafeDrive is a driving assistant mobile application designed to track and analyz
 1. Clone the repository:
    ```bash
    git clone https://github.com/adlinzahid/SafeDrive.git
+
+---
 
 ## Requirement Analysis
 
