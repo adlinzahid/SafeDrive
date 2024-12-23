@@ -64,6 +64,8 @@ Identify and document the technical and functional requirements for the SafeDriv
 - Generate actionable feedback messages based on aggregated data.
 
 
+### **Screen Navigation Flow**
+![mobileapp](https://github.com/user-attachments/assets/e78f7b3e-fe19-4003-8cd4-c41a7c1a2ab4)
 
 
 ## **Next Steps**
