@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:safe_drive/ui_screens/homepage/homepage.dart';
 import 'package:safe_drive/ui_screens/homepage/splashscreen.dart';
 
 void main() {
@@ -13,7 +14,7 @@ class SafeDrive extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home:
-          SplashScreen(), // wrapper is a widget that decides which screen to show based on the user's authentication status
+          SplashScreen(), // Wrapper() wrapper is a widget that decides which screen to show based on the user's authentication status
     );
   }
 }
