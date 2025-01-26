@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:safe_drive/ui_screens/homepage/splashscreen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const SafeDrive());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SafeDrive extends StatelessWidget {
+  const SafeDrive({super.key});
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: Wrapper(), // wrapper is a widget that decides which screen to show based on the user's authentication status
+      home:
+          SplashScreen(), // wrapper is a widget that decides which screen to show based on the user's authentication status
     );
   }
 }
-
-
-

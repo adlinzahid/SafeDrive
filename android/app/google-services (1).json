@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "435696584216",
+    "project_id": "safedrive-f52ba",
+    "storage_bucket": "safedrive-f52ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435696584216:android:9b5bd41c62a01a8212656d",
+        "android_client_info": {
+          "package_name": "com.example.safe_drive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHzDcEKdjNNX14eACPRZIwli7wk_HrsPk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
