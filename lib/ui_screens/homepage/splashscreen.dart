@@ -16,7 +16,8 @@ class SplashScreen extends StatelessWidget {
         ],
       ),
       nextScreen: const Homepage(),
-      splashIconSize: 400,
+      splashTransition: SplashTransition.fadeTransition,
+      splashIconSize: 3000,
       backgroundColor: Colors.deepPurple,
     );
   }
