@@ -69,6 +69,7 @@ flutter:
   - assets/images/purplelogo.png
   - assets/images/newpurplelogo.png
   - assets/images/2.png
+  - assets/images/splashlogo.png
   - assets/images/car.jpg
   - assets/lottie/drivingAnimation.json
   - assets/lottie/drivingcar.json
