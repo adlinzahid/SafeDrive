@@ -10,14 +10,16 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedSplashScreen(
       splash: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(
-              child: LottieBuilder.asset("assets/lottie/drivingAnimation.json"))
+          Image.asset("assets/images/splashlogo.png", height: 70),
+          LottieBuilder.asset("assets/lottie/drivingAnimation.json",
+              height: 200),
         ],
       ),
       nextScreen: const Homepage(),
-      splashTransition: SplashTransition.fadeTransition,
-      splashIconSize: 3000,
+      splashTransition: SplashTransition.scaleTransition,
+      splashIconSize: 450,
       backgroundColor: Colors.deepPurple,
     );
   }
