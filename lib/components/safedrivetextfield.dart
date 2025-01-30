@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 //modify the style of the textfield as needed here
 
 class Safedrivetextfield extends StatelessWidget {
-  final controller;
+  final TextEditingController controller;
   final String hintText;
   final bool obscureText;
   const Safedrivetextfield(
