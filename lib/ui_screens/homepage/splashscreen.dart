@@ -1,7 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:safe_drive/ui_screens/homepage/homepage.dart';
+import 'package:safe_drive/ui_screens/authentication/login.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -17,7 +17,7 @@ class SplashScreen extends StatelessWidget {
               height: 200),
         ],
       ),
-      nextScreen: const Homepage(),
+      nextScreen: const Loginpage(),
       splashTransition: SplashTransition.scaleTransition,
       splashIconSize: 450,
       backgroundColor: Colors.deepPurple,
