@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-// import 'package:safe_drive/ui_screens/homepage/homepage.dart';
-import 'package:safe_drive/ui_screens/homepage/splashscreen.dart';
+import 'package:safe_drive/authentication/wrapper.dart';
+import 'services/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const SafeDrive());
 }
 
@@ -14,7 +19,7 @@ class SafeDrive extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home:
-          SplashScreen(), // Wrapper() wrapper is a widget that decides which screen to show based on the user's authentication status
+          Wrapper(), // Wrapper() wrapper is a widget that decides which screen to show based on the user's authentication status
     );
   }
 }
