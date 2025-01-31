@@ -17,10 +17,10 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
-  static List<Widget> _widgetOptions = <Widget>[
-    Homecontent(),
-    DriveTrip(),
-    Settings(),
+  static final List<Widget> _widgetOptions = <Widget>[
+    const Homecontent(),
+    const DriveTrip(),
+    const Settings(),
   ];
 
   @override

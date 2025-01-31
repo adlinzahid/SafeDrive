@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:safe_drive/components/safedrivebutton.dart';
 import 'package:safe_drive/components/safedrivetextfield.dart';
+import 'package:safe_drive/ui_screens/authentication/register.dart';
+import 'package:safe_drive/ui_screens/homepage/homepage.dart';
 
 class Loginpage extends StatefulWidget {
   const Loginpage({super.key});
@@ -10,6 +12,16 @@ class Loginpage extends StatefulWidget {
 }
 
 class _LoginpageState extends State<Loginpage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+
+  @override
+  void dispose() { //dispose of the controllers when the widget is removed from the tree
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,14 +48,14 @@ class _LoginpageState extends State<Loginpage> {
             const SizedBox(height: 25),
             //Username textfield
             Safedrivetextfield(
-                controller: TextEditingController(),
+                controller: _usernameController,
                 hintText: 'Username',
                 obscureText: false),
 
             //Password textfield
             const SizedBox(height: 10),
             Safedrivetextfield(
-                controller: TextEditingController(),
+                controller: _passwordController,
                 hintText: 'Password',
                 obscureText: true),
 
@@ -72,7 +84,8 @@ class _LoginpageState extends State<Loginpage> {
             Safedrivebutton(
               text: "Sign In",
               onTap: () {
-                // Add your onTap functionality here
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const Homepage()));
               },
             ),
 
@@ -144,13 +157,23 @@ class _LoginpageState extends State<Loginpage> {
                       color: Colors.white,
                       fontWeight: FontWeight.w600),
                 ),
-                Text(
-                  "Register now",
-                  style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 12,
-                      color: Colors.yellowAccent[700],
-                      fontWeight: FontWeight.w600),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Registerpage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "Register now",
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 12,
+                        color: Colors.yellowAccent[700],
+                        fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             )
