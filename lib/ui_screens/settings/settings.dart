@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Settings extends StatefulWidget {
-  Settings({super.key});
+  const Settings({super.key});
   @override
   State<Settings> createState() => _SettingsState();
 }
@@ -10,8 +10,18 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple,
       appBar: AppBar(
-        title: Text('Settings'), 
+        backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
+        title: Text('Settings',
+            style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.bold,
+                fontSize: 27,
+                color: Colors.yellowAccent[700],
+                letterSpacing: 1.5)),
+        centerTitle: true,
       ),
       body: ListView(
         children: [
@@ -19,23 +29,40 @@ class _SettingsState extends State<Settings> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListTile(
-                title: Text('Profile'),
-                trailing: Icon(Icons.arrow_forward_ios),
+                title: const Text('Profile',
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Colors.white)),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
                 onTap: () {
-                    Navigator.pushNamed(context, '/userprofile'); // route
+                  Navigator.pushNamed(context, '/userprofile'); // route
                 },
-            
               ),
               ListTile(
-                title: Text('Notifications'),
-                trailing: Icon(Icons.arrow_forward_ios),
+                title: const Text('Notifications',
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Colors.white)),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
                 onTap: () {
                   Navigator.pushNamed(context, 'Notifications'); // route
                 },
               ),
               ListTile(
-                title: Text('Logout Account'),
-                trailing: Icon(Icons.arrow_forward_ios),
+                title: const Text('Logout Account',
+                    style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Colors.white)),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
                 onTap: () {
                   // Implement logout functionality here
                 },
