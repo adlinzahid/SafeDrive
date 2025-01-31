@@ -15,6 +15,13 @@ class _LoginpageState extends State<Loginpage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
+  @override
+  void dispose() { //dispose of the controllers when the widget is removed from the tree
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,14 +48,14 @@ class _LoginpageState extends State<Loginpage> {
             const SizedBox(height: 25),
             //Username textfield
             Safedrivetextfield(
-                controller: TextEditingController(),
+                controller: _usernameController,
                 hintText: 'Username',
                 obscureText: false),
 
             //Password textfield
             const SizedBox(height: 10),
             Safedrivetextfield(
-                controller: TextEditingController(),
+                controller: _passwordController,
                 hintText: 'Password',
                 obscureText: true),
 
