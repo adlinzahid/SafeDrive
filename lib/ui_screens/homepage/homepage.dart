@@ -13,10 +13,10 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
-  static List<Widget> _widgetOptions = <Widget>[
-    Homecontent(),
-    DriveTrip(),
-    Settings(),
+  static final List<Widget> _widgetOptions = <Widget>[
+    const Homecontent(),
+    const DriveTrip(),
+    const Settings(),
   ];
 
   @override
@@ -78,6 +78,7 @@ class Homecontent extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
+            automaticallyImplyLeading: false, // Remove the back button
             backgroundColor: const Color.fromRGBO(103, 58, 183, 1),
             centerTitle: true, // Center the title
             expandedHeight: 130,
