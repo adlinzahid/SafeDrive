@@ -177,150 +177,163 @@ class _HomecontentState extends State<Homecontent> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Profile Section
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                color: Colors.white,
-                child: Row(
-                  children: [
-                    // Profile Image
-                    const CircleAvatar(
-                      radius: 35,
-                      backgroundImage:
-                          AssetImage('assets/images/profile_pic.png'),
+              Column(
+                children: [
+                  // SafeDrive Logo
+                  /* Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Image.asset(
+                      "assets/images/SafeDriveLogo.png",
+                      height: 60, 
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(width: 15),
-                    // Profile Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Hi, $userName!",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "Vehicle: $vehiclePlate",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Edit Button
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.deepPurple),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const UserProfile(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 15),
-              // Start Trip Section
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20.0),
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.8,
-                    height: 400,
+                  ),*/
+                  // Profile Section
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                     color: Colors.deepPurple[200],
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
                       children: [
-                        if (endTime != null) ...[
-                          const Text(
-                            "Trip Summary",
-                            style: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "Start: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime!)}",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            "End: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime!)}",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "Distance: ${totalDistance.toStringAsFixed(2)} km",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            "Avg Speed: ${avgSpeed.toStringAsFixed(1)} km/h",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Center(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: Text(
-                                getFeedback(),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
+                        // Profile Image
+                        const CircleAvatar(
+                          radius: 35,
+                          backgroundImage:
+                              AssetImage('assets/images/SafeDriveLogo.png'),
+                        ),
+                        const SizedBox(width: 15),
+                        // Profile Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Hi, $userName!",
+                                style: const TextStyle(
                                   fontFamily: 'Montserrat',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.yellowAccent[700],
                                 ),
                               ),
-                            ),
+                              Text(
+                                "Vehicle: $vehiclePlate",
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                        SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: toggleTrip,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isTripActive
-                                ? Colors.redAccent
-                                : Colors.yellowAccent[700],
-                            foregroundColor: Colors.deepPurple,
-                          ),
-                          child:
-                              Text(isTripActive ? 'Stop Trip' : 'Start Trip'),
+                        ),
+                        // Edit Button
+                        IconButton(
+                          icon:
+                              const Icon(Icons.edit, color: Colors.deepPurple),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UserProfile(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 15),
+                  // Start Trip Section
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20.0),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        height: 400,
+                        color: Colors.deepPurple[200],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (endTime != null) ...[
+                              const Text(
+                                "Trip Summary",
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                "Start: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime!)}",
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                "End: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime!)}",
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                "Distance: ${totalDistance.toStringAsFixed(2)} km",
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                "Avg Speed: ${avgSpeed.toStringAsFixed(1)} km/h",
+                                style: const TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20.0),
+                                  child: Text(
+                                    getFeedback(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.yellowAccent[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: toggleTrip,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isTripActive
+                                    ? Colors.redAccent
+                                    : Colors.yellowAccent[700],
+                                foregroundColor: Colors.deepPurple,
+                              ),
+                              child: Text(
+                                  isTripActive ? 'Stop Trip' : 'Start Trip'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
