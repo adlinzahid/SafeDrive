@@ -10,9 +10,19 @@ class DriveTrip extends StatefulWidget {
 class _DriveTripState extends State<DriveTrip> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Drive Trip'),
+    return Scaffold(
+      backgroundColor: Colors.deepPurple,
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
+        title: Text('Trip History',
+            style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.bold,
+                fontSize: 27,
+                color: Colors.yellowAccent[700],
+                letterSpacing: 1.5)),
+        centerTitle: true,
       ),
     );
   }
