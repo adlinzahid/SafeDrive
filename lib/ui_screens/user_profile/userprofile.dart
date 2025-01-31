@@ -4,16 +4,22 @@ class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
 
   @override
-  _UserProfileState createState() => _UserProfileState();
+  State<UserProfile> createState() => _UserProfileState();
 }
 
 class _UserProfileState extends State<UserProfile> {
-  final TextEditingController nameController = TextEditingController(text: 'Yarewan Williamson');
-  final TextEditingController phoneController = TextEditingController(text: '+12 123 123 123');
-  final TextEditingController emailController = TextEditingController(text: 'yarewill125@gmail.com');
-  final TextEditingController genderController = TextEditingController(text: 'Male');
-  final TextEditingController birthdateController = TextEditingController(text: '01/01/1990');
-  final TextEditingController addressController = TextEditingController(text: '123 Main St, Springfield');
+  final TextEditingController nameController =
+      TextEditingController(text: 'Yarewan Williamson');
+  final TextEditingController phoneController =
+      TextEditingController(text: '+12 123 123 123');
+  final TextEditingController emailController =
+      TextEditingController(text: 'yarewill125@gmail.com');
+  final TextEditingController genderController =
+      TextEditingController(text: 'Male');
+  final TextEditingController birthdateController =
+      TextEditingController(text: '01/01/1990');
+  final TextEditingController addressController =
+      TextEditingController(text: '123 Main St, Springfield');
   final TextEditingController passwordController = TextEditingController();
 
   bool isEditing = false;
@@ -24,11 +30,21 @@ class _UserProfileState extends State<UserProfile> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
-        title: const Text('User Profile', style: TextStyle(color: Colors.white),),
+        title: Text(
+          'User Profile',
+          style: TextStyle(
+            color: Colors.yellowAccent[700],
+            fontFamily: 'Montserrat',
+            fontSize: 27,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () {
-            Navigator.of(context).pop(); // Navigates back to the previous screen
+            Navigator.of(context)
+                .pop(); // Navigates back to the previous screen
           },
         ),
       ),
@@ -52,18 +68,23 @@ class _UserProfileState extends State<UserProfile> {
                 children: [
                   const CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/images/profile_pic.png'),
+                    backgroundImage:
+                        AssetImage('assets/images/profile_pic.png'),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: nameController,
                     textAlign: TextAlign.center,
                     enabled: isEditing,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                     decoration: const InputDecoration(border: InputBorder.none),
                   ),
                   IconButton(
-                    icon: Icon(isEditing ? Icons.save : Icons.edit, color: Colors.white),
+                    icon: Icon(isEditing ? Icons.save : Icons.edit,
+                        color: Colors.white),
                     onPressed: () {
                       setState(() {
                         isEditing = !isEditing;
@@ -77,12 +98,17 @@ class _UserProfileState extends State<UserProfile> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  _buildEditableField(Icons.account_circle, 'Gender', genderController),
-                  _buildEditableField(Icons.cake, 'Birthday', birthdateController),
+                  _buildEditableField(
+                      Icons.account_circle, 'Gender', genderController),
+                  _buildEditableField(
+                      Icons.cake, 'Birthday', birthdateController),
                   _buildEditableField(Icons.phone, 'Phone', phoneController),
                   _buildEditableField(Icons.email, 'Email', emailController),
-                  _buildEditableField(Icons.location_on, 'Address', addressController),
-                  _buildEditableField(Icons.lock, 'Enter Password', passwordController, obscureText: true),
+                  _buildEditableField(
+                      Icons.location_on, 'Address', addressController),
+                  _buildEditableField(
+                      Icons.lock, 'Enter Password', passwordController,
+                      obscureText: true),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -93,7 +119,9 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
-  Widget _buildEditableField(IconData icon, String label, TextEditingController controller, {bool obscureText = false}) {
+  Widget _buildEditableField(
+      IconData icon, String label, TextEditingController controller,
+      {bool obscureText = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
