@@ -55,46 +55,53 @@ class AuthActivity {
   Future<User?> signInUserWithEmailAndPassword(
       BuildContext context, String email, String password) async {
     try {
-      final UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final User? user = userCredential.user;
-
-      //check if the user is registered
-      if (user != null) {
-        final DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestore
-            .collection('Users')
-            .where('email', isEqualTo: email)
-            .get()
-            .then((value) => value.docs.first);
-
-        if (userDoc.exists) {
-          return user;
-        } else {
-          log("User not found in Firestore");
-          _errorSnackbar(context, "User is not registered");
-        }
+      if (email.isEmpty || password.isEmpty) {
+        log('Email or password is empty');
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Error', textAlign: TextAlign.center),
+              content: const Text('Email or password is empty'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return null;
       }
 
-      //if password does not match, show error message
-      if (user == null) {
-        log("Password does not match");
-        _errorSnackbar(context, "Wrong password");
-      }
-
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        throw 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        log("Password does not match");
-        _errorSnackbar(context, "Wrong password");
-      }
+      final creds = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      return creds.user;
     } catch (e) {
-      rethrow;
+      //check if email is registered
+      if (!e.toString().contains('no user record')) {
+        log('Error in signing in: $e'); // Log the error
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Error', textAlign: TextAlign.center),
+              content: const Text('Invalid email or password'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
     }
     return null;
   }
