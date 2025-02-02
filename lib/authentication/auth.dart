@@ -2,84 +2,150 @@
 
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthActivity {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  //Register an account with email, username, and password
-  Future<User?> registerUserwithEmailAndPassword(String email, String password,
-      String username, BuildContext context) async {
-    //if username is already taken, notify the user
+  //Register user account with email and password
+  Future<User?> registerUserWithEmailAndPassword(
+      String email, String password, String username) async {
     try {
-      if (await isUsernameTaken(username)) {
-        throw 'Username is already taken';
-      }
-
-      //check if input fields are not empty
-      if (email.isEmpty || password.isEmpty || username.isEmpty) {
-        log('Email, password or full name is empty');
-        return null;
-      }
-
-      //create a new user with email and password with firebase authentication
-      final creds = await _auth.createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      //upon registering, create a unique user id for the user and save it to the database. E.g: userId: UID000
-      String userId;
-      bool exists;
+      await userCredential.user!.updateDisplayName(username);
+      await userCredential.user!.reload();
+
+      // Generate a unique ID for the user
       var uuid = const Uuid();
+      String uniqueId =
+          'UID${uuid.v4().substring(0, 6).toUpperCase()}'; //UID + 6 random characters
 
-      do {
-        String uniqueId = uuid.v4().substring(0, 6).toUpperCase();
-        userId = 'UID$uniqueId';
-
-        var doc = await _firestore.collection('Users').doc(userId).get();
-        exists = doc.exists;
-      } while (exists);
-
-      //save input from user to the database
-      await FirebaseFirestore.instance.collection('Users').doc(userId).set({
-        'email': email,
+      // Save the user data to Firestore with the unique ID
+      await _firestore.collection('Users').doc(uniqueId).set({
         'username': username,
-        'phone': '',
-        'Gender': '',
-        'Birthdate': '',
-        'Address': '',
-        'name': '',
-        'userId': userId,
+        'email': email,
+        'userId':
+            uniqueId, // save the user's unique ID for identification purposes
+        'uid': userCredential.user?.uid,
+        'createdAt': FieldValue.serverTimestamp(),
       });
-
-      return creds.user;
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        throw 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        throw 'The account already exists for that email.';
+      }
     } catch (e) {
       rethrow;
     }
+    return null;
   }
 
   //Sign in user account with username and password
   Future<User?> signInUserWithEmailAndPassword(
-      String email, String password) async {
+      BuildContext context, String email, String password) async {
     try {
       final UserCredential userCredential =
           await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      final User? user = userCredential.user;
+
+      //check if the user is registered
+      if (user != null) {
+        final DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestore
+            .collection('Users')
+            .where('email', isEqualTo: email)
+            .get()
+            .then((value) => value.docs.first);
+
+        if (userDoc.exists) {
+          return user;
+        } else {
+          log("User not found in Firestore");
+          _errorSnackbar(context, "User is not registered");
+        }
+      }
+
+      //if password does not match, show error message
+      if (user == null) {
+        log("Password does not match");
+        _errorSnackbar(context, "Wrong password");
+      }
+
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         throw 'No user found for that email.';
       } else if (e.code == 'wrong-password') {
-        throw 'Wrong password provided for that user.';
+        log("Password does not match");
+        _errorSnackbar(context, "Wrong password");
       }
     } catch (e) {
       rethrow;
+    }
+    return null;
+  }
+
+  //Sign in with Google
+  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        log("User canceled the Google Sign-In process.");
+        return null; // Handle case when user cancels sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      //save user data to Firestore if the user is new
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        final DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestore
+            .collection('Users')
+            .where('email', isEqualTo: user.email)
+            .get()
+            .then((value) => value.docs.first);
+
+        if (!userDoc.exists) {
+          // Generate a unique ID for the user
+          var uuid = const Uuid();
+          String uniqueId =
+              'UID${uuid.v4().substring(0, 6).toUpperCase()}'; //UID + 6 random characters
+
+          await _firestore.collection('Users').doc(uniqueId).set({
+            'username': user.displayName,
+            'email': user.email,
+            'userId': uniqueId,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+      return await _auth.signInWithCredential(credential);
+    } catch (e) {
+      log("Error signing in with Google: $e");
+      _errorSnackbar(context, "Error signing in with Google");
     }
     return null;
   }
@@ -98,14 +164,30 @@ class AuthActivity {
     return FirebaseAuth.instance.currentUser;
   }
 
-  //Check if the username is already taken
-  Future<bool> isUsernameTaken(String username) async {
-    //if the username is already taken, return true and notify the user
-    final query = await _firestore
-        .collection('Users')
-        .where('username', isEqualTo: username)
-        .get();
+//show error snackbar message
+  void _errorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.red,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
+        showCloseIcon: true,
+      ),
+    );
+  }
 
-    return query.docs.isNotEmpty;
+  //is user logged in
+  Future<bool> isLoggedIn() async {
+    final User? user = _auth.currentUser;
+    return user != null;
   }
 }
