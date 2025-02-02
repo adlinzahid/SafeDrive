@@ -1,4 +1,9 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:safe_drive/authentication/auth.dart';
 import 'package:safe_drive/components/safedrivebutton.dart';
 import 'package:safe_drive/components/safedrivetextfield.dart';
 import 'package:safe_drive/ui_screens/authentication/register.dart';
@@ -12,16 +17,18 @@ class Loginpage extends StatefulWidget {
 }
 
 class _LoginpageState extends State<Loginpage> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  final _auth = AuthActivity();
 
   @override
-  void dispose() { //dispose of the controllers when the widget is removed from the tree
-    _usernameController.dispose();
+  void dispose() {
+    //dispose of the controllers when the widget is removed from the tree
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,8 +55,8 @@ class _LoginpageState extends State<Loginpage> {
             const SizedBox(height: 25),
             //Username textfield
             Safedrivetextfield(
-                controller: _usernameController,
-                hintText: 'Username',
+                controller: _emailController,
+                hintText: 'Email',
                 obscureText: false),
 
             //Password textfield
@@ -84,8 +91,7 @@ class _LoginpageState extends State<Loginpage> {
             Safedrivebutton(
               text: "Sign In",
               onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const Homepage()));
+                _loginUser();
               },
             ),
 
@@ -123,20 +129,25 @@ class _LoginpageState extends State<Loginpage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    border: Border.all(
+                GestureDetector(
+                  onTap: () {
+                    _signinWithGoogle();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2.0,
+                      ),
+                      borderRadius: BorderRadius.circular(8.0),
                       color: Colors.white,
-                      width: 2.0,
                     ),
-                    borderRadius: BorderRadius.circular(8.0),
-                    color: Colors.white,
-                  ),
-                  child: Image.asset(
-                    "assets/images/googleicon.png",
-                    height: 50,
+                    child: Image.asset(
+                      "assets/images/googleicon.png",
+                      height: 50,
+                    ),
                   ),
                 ),
               ],
@@ -159,6 +170,7 @@ class _LoginpageState extends State<Loginpage> {
                 ),
                 GestureDetector(
                   onTap: () {
+                    log("Register now clicked");
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -181,5 +193,73 @@ class _LoginpageState extends State<Loginpage> {
         ),
       )),
     );
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.red,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
+        showCloseIcon: true,
+      ),
+    );
+  }
+
+  _loginUser() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackbar("Please fill in all the fields");
+      return;
+    }
+
+    try {
+      User? user =
+          await _auth.signInUserWithEmailAndPassword(context, email, password);
+
+      if (user != null) {
+        Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Homepage(),
+          ),
+        );
+      }
+    } catch (e) {
+      log("Error signing in: $e");
+      _showSnackbar("An error occurred. Please try again");
+    }
+  }
+
+  _signinWithGoogle() async {
+    try {
+      await GoogleSignIn().signOut();
+      // ignore: use_build_context_synchronously
+      final user = await _auth.signInWithGoogle(context);
+      if (user != null) {
+        log('User logged in successfully');
+        Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Homepage(),
+            ));
+      }
+    } catch (e) {
+      log("Error signing in with Google: $e");
+      _showSnackbar("An error occurred. Please try again");
+    }
   }
 }
