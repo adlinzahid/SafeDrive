@@ -1,12 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:safe_drive/authentication/auth.dart';
-import 'package:safe_drive/components/errorsnackbar.dart';
 import 'package:safe_drive/components/safedrivebutton.dart';
 import 'package:safe_drive/components/safedrivetextfield.dart';
 import 'package:safe_drive/ui_screens/authentication/login.dart';
 import 'package:safe_drive/ui_screens/homepage/homepage.dart';
+import 'package:uuid/uuid.dart';
 
 class Registerpage extends StatefulWidget {
   const Registerpage({super.key});
@@ -17,6 +20,7 @@ class Registerpage extends StatefulWidget {
 
 class _Registerpage extends State<Registerpage> {
   final _auth = AuthActivity();
+  final _firestore = FirebaseFirestore.instance;
 
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -125,22 +129,54 @@ class _Registerpage extends State<Registerpage> {
       final password = _passwordController.text;
 
       if (email.isNotEmpty && username.isNotEmpty && password.isNotEmpty) {
-        final user = await _auth.registerUserwithEmailAndPassword(
-            email, password, username, context);
+        final user = await _auth.registerUserWithEmailAndPassword(
+            email, password, username);
+
         if (user != null) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const Homepage()));
+          // Navigate to HomePage FIRST
+          Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const Homepage()))
+              .then((_) async {
+            // Only save user data in Firestore after successful navigation
+            var uuid = const Uuid();
+            String uniqueId = 'UID${uuid.v4().substring(0, 6).toUpperCase()}';
+
+            await _firestore.collection('Users').doc(uniqueId).set({
+              'username': username,
+              'email': email,
+              'userId': uniqueId,
+              'authId': user.uid, // Store Firebase Auth UID
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Errorsnackbar(message: "An error occurred")));
+          _showSnackbar("This email is already in use");
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Errorsnackbar(message: "Please fill all fields")));
+        _showSnackbar("Please fill in all fields");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Errorsnackbar(message: "An error occurred")));
+      log('Error in registerUser: $e');
     }
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.red,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
+        showCloseIcon: true,
+      ),
+    );
   }
 }

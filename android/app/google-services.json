@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "435696584216",
+    "firebase_url": "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "safedrive-f52ba",
     "storage_bucket": "safedrive-f52ba.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.safe_drive"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "435696584216-30nributir7mg3hj52iessr1vidsl9c8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.safe_drive",
+            "certificate_hash": "4d3de7e4c4057587b2c641d61b3ea0f19ee084f6"
+          }
+        },
+        {
+          "client_id": "435696584216-9q58bqbkj25u3uee4cgfbo57ugr3a8r4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBHzDcEKdjNNX14eACPRZIwli7wk_HrsPk"
@@ -20,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "435696584216-9q58bqbkj25u3uee4cgfbo57ugr3a8r4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "435696584216-4ph0c8jlvg6nhva7ic797qr12t4c5elh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.safeDrive"
+              }
+            }
+          ]
         }
       }
     }

@@ -17,7 +17,7 @@ class SafeDrive extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home:
           Wrapper(), // Wrapper() wrapper is a widget that decides which screen to show based on the user's authentication status
