@@ -1,4 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -8,21 +12,27 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  final TextEditingController nameController =
-      TextEditingController(text: 'Yarewan Williamson');
-  final TextEditingController phoneController =
-      TextEditingController(text: '+12 123 123 123');
-  final TextEditingController emailController =
-      TextEditingController(text: 'yarewill125@gmail.com');
-  final TextEditingController genderController =
-      TextEditingController(text: 'Male');
-  final TextEditingController birthdateController =
-      TextEditingController(text: '01/01/1990');
-  final TextEditingController addressController =
-      TextEditingController(text: '123 Main St, Springfield');
-  final TextEditingController passwordController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   bool isEditing = false;
+  User? currentUser;
+
+  @override
+  @override
+  void initState() {
+    super.initState();
+    currentUser = _auth.currentUser;
+    //Initialise the text controllers with the user data
+    if (currentUser?.displayName != null) {
+      _nameController.text = currentUser!.displayName!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +83,7 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                   const SizedBox(height: 10),
                   TextField(
-                    controller: nameController,
+                    controller: _nameController,
                     textAlign: TextAlign.center,
                     enabled: isEditing,
                     style: const TextStyle(
@@ -85,7 +95,10 @@ class _UserProfileState extends State<UserProfile> {
                   IconButton(
                     icon: Icon(isEditing ? Icons.save : Icons.edit,
                         color: Colors.white),
-                    onPressed: () {
+                    onPressed: () async {
+                      if (isEditing) {
+                        await _updateUserData();
+                      }
                       setState(() {
                         isEditing = !isEditing;
                       });
@@ -99,16 +112,15 @@ class _UserProfileState extends State<UserProfile> {
               child: Column(
                 children: [
                   _buildEditableField(
-                      Icons.account_circle, 'Gender', genderController),
+                    Icons.person,
+                    currentUser?.displayName ?? 'Name',
+                    _nameController,
+                  ),
+                  _buildEditableField(Icons.email,
+                      currentUser?.email ?? 'Email', _emailController),
+                  _buildEditableField(Icons.phone, 'Phone', _phoneController),
                   _buildEditableField(
-                      Icons.cake, 'Birthday', birthdateController),
-                  _buildEditableField(Icons.phone, 'Phone', phoneController),
-                  _buildEditableField(Icons.email, 'Email', emailController),
-                  _buildEditableField(
-                      Icons.location_on, 'Address', addressController),
-                  _buildEditableField(
-                      Icons.lock, 'Enter Password', passwordController,
-                      obscureText: true),
+                      Icons.location_on, 'Address', _addressController),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -125,6 +137,12 @@ class _UserProfileState extends State<UserProfile> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
+        style: const TextStyle(
+          fontFamily: 'Montserrat',
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: Colors.purple,
+        ),
         controller: controller,
         obscureText: obscureText,
         enabled: isEditing,
@@ -137,5 +155,75 @@ class _UserProfileState extends State<UserProfile> {
         ),
       ),
     );
+  }
+
+  _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.yellowAccent[700],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
+        showCloseIcon: true,
+      ),
+    );
+  }
+
+  _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.red,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
+        showCloseIcon: true,
+      ),
+    );
+  }
+
+  Future<void> _updateUserData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        //fetch the correct document Id based on the user's uid
+        QuerySnapshot userDoc = await _firestore
+            .collection('Users')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        if (userDoc.docs.isNotEmpty) {
+          String docId = userDoc.docs.first.id; // get the generated document id
+          //update the user data
+          await _firestore.collection('Users').doc(docId).update({
+            'username': _nameController.text,
+            'email': _emailController.text,
+            'phone': _phoneController.text,
+            'address': _addressController.text,
+          });
+          _showSnackbar('User data updated successfully');
+        } else {
+          _showErrorSnackbar('User data not found');
+        }
+      }
+    } catch (e) {
+      log('Error updating user data: $e');
+      _showErrorSnackbar('Error updating user data');
+    }
   }
 }
