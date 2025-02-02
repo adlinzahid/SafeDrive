@@ -46,7 +46,7 @@ class _DriveTripState extends State<DriveTrip> {
                 );
               },
               child: Card(
-                color: Colors.deepPurple[200], // Lighter purple card color
+                color: Colors.deepPurple[200],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
