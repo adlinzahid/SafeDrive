@@ -1,9 +1,11 @@
 import 'dart:developer';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:safe_drive/ui_screens/drivetrip/drivetrip.dart';
-import 'package:safe_drive/ui_screens/settings/settings.dart';
+import 'package:safe_drive/ui_screens/settings/settings.dart'
+    as safedrive_settings;
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:safe_drive/ui_screens/user_profile/userprofile.dart';
@@ -20,7 +22,7 @@ class _HomepageState extends State<Homepage> {
   static final List<Widget> _widgetOptions = <Widget>[
     const Homecontent(),
     const DriveTrip(),
-    const Settings(),
+    const safedrive_settings.Settings(),
   ];
 
   @override
@@ -92,9 +94,21 @@ class _HomecontentState extends State<Homecontent> {
   DateTime? endTime;
   double avgSpeed = 0.0;
 
-// Mock user profile data
-  String userName = "Hannah";
-  String vehiclePlate = "vba 585";
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  User? currentUser;
+
+  String vehiclePlate = "vba 585"; // Define the vehicle plate
+
+  @override
+  void initState() {
+    super.initState();
+    currentUser = _auth.currentUser;
+    //Initialise the text controllers with the user data
+    if (currentUser?.displayName != null) {
+      currentUser!.displayName!;
+    }
+  }
 
   void toggleTrip() async {
     if (!isTripActive) {
@@ -197,7 +211,7 @@ class _HomecontentState extends State<Homecontent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Hi, $userName!",
+                            "Hi ${currentUser!.displayName!}!",
                             style: const TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 20,
@@ -253,7 +267,7 @@ class _HomecontentState extends State<Homecontent> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Text(
                             "Start: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime!)}",
                             style: const TextStyle(
@@ -270,7 +284,7 @@ class _HomecontentState extends State<Homecontent> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Text(
                             "Distance: ${totalDistance.toStringAsFixed(2)} km",
                             style: const TextStyle(
@@ -287,7 +301,7 @@ class _HomecontentState extends State<Homecontent> {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Center(
                             child: Padding(
                               padding:
@@ -305,7 +319,7 @@ class _HomecontentState extends State<Homecontent> {
                             ),
                           ),
                         ],
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: toggleTrip,
                           style: ElevatedButton.styleFrom(
