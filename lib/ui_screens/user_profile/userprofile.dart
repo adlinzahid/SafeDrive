@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:image_picker/image_picker.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -18,7 +19,7 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _vehicleController = TextEditingController();
 
   bool isEditing = false;
   User? currentUser;
@@ -120,7 +121,7 @@ class _UserProfileState extends State<UserProfile> {
                       currentUser?.email ?? 'Email', _emailController),
                   _buildEditableField(Icons.phone, 'Phone', _phoneController),
                   _buildEditableField(
-                      Icons.location_on, 'Address', _addressController),
+                      Icons.drive_eta, 'Vehicle Number', _vehicleController),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -214,7 +215,7 @@ class _UserProfileState extends State<UserProfile> {
             'username': _nameController.text,
             'email': _emailController.text,
             'phone': _phoneController.text,
-            'address': _addressController.text,
+            'vehicle number': _vehicleController.text,
           });
           _showSnackbar('User data updated successfully');
         } else {
