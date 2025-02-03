@@ -98,7 +98,7 @@ class _HomecontentState extends State<Homecontent> {
 
   User? currentUser;
 
-  String vehiclePlate = "vba 585"; // Define the vehicle plate
+  //String vehiclePlate = "vba 585"; // Define the vehicle plate
 
   @override
   void initState() {
@@ -195,40 +195,37 @@ class _HomecontentState extends State<Homecontent> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                color: Colors.white,
-                child: Row(
+                color: Colors.deepPurple,
+                child: Column(
+                  //crossAxisAlignment: CrossAxisAlignment.baseline,
                   children: [
-                    // Profile Image
-                    const CircleAvatar(
-                      radius: 35,
-                      backgroundImage:
-                          AssetImage('assets/images/profile_pic.png'),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/2.png',
+                        width: 130,
+                        height: 130,
+                      ),
                     ),
-                    const SizedBox(width: 15),
-                    // Profile Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Hi ${currentUser!.displayName!}!",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
+                    const SizedBox(height: 10),
+                    Text(
+                      "Hi, ${currentUser!.displayName!}!",
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                    /*Text(
                             "Vehicle: $vehiclePlate",
                             style: const TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 14,
                               color: Colors.grey,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          ),*/
+
                     // Edit Button
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.deepPurple),
@@ -257,6 +254,15 @@ class _HomecontentState extends State<Homecontent> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        /*Text(
+                          "Hi, ${currentUser!.displayName!}!",
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),*/
                         if (endTime != null) ...[
                           const Text(
                             "Trip Summary",
