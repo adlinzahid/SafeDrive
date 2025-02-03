@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:safe_drive/ui_screens/drivetrip/triphistory.dart';
 
 class DriveTrip extends StatefulWidget {
   const DriveTrip({super.key});
@@ -41,7 +42,7 @@ class _DriveTripState extends State<DriveTrip> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        TripDetailsScreen(tripDateTime: trip["dateTime"]),
+                        TripDetails(tripDateTime: trip["dateTime"]),
                   ),
                 );
               },
@@ -77,7 +78,7 @@ class _DriveTripState extends State<DriveTrip> {
 }
 
 // Dummy Trip Details Page (Modify to show real details)
-class TripDetailsScreen extends StatelessWidget {
+/*class TripDetailsScreen extends StatelessWidget {
   final DateTime tripDateTime;
 
   const TripDetailsScreen({super.key, required this.tripDateTime});
@@ -103,4 +104,4 @@ class TripDetailsScreen extends StatelessWidget {
       ),
     );
   }
-}
+}*/
