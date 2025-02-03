@@ -1,12 +1,13 @@
 import 'dart:developer';
-import 'dart:async';
+// import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:safe_drive/ui_screens/drivetrip/drivetrip.dart';
+import 'package:safe_drive/ui_screens/drivetrip/startdrive.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart'
     as safedrive_settings;
-import 'package:geolocator/geolocator.dart';
+// import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:safe_drive/ui_screens/user_profile/userprofile.dart';
 
@@ -85,11 +86,11 @@ class Homecontent extends StatefulWidget {
 
 class _HomecontentState extends State<Homecontent> {
   bool isTripActive = false;
-  Position? _lastPosition;
+  // Position? _lastPosition;
   double totalDistance = 0.0;
   int hardBrakes = 0;
   int sharpTurns = 0;
-  Timer? _tripTimer;
+  // Timer? _tripTimer;
   DateTime? startTime;
   DateTime? endTime;
   double avgSpeed = 0.0;
@@ -107,79 +108,6 @@ class _HomecontentState extends State<Homecontent> {
     //Initialise the text controllers with the user data
     if (currentUser?.displayName != null) {
       currentUser!.displayName!;
-    }
-  }
-
-  void toggleTrip() async {
-    if (!isTripActive) {
-      log("Trip started!");
-      setState(() {
-        isTripActive = true;
-        totalDistance = 0.0;
-        hardBrakes = 0;
-        sharpTurns = 0;
-        startTime = DateTime.now();
-      });
-      _startTracking();
-    } else {
-      log("Trip stopped!");
-      setState(() {
-        isTripActive = false;
-        endTime = DateTime.now();
-      });
-      _tripTimer?.cancel();
-    }
-  }
-
-  void _startTracking() {
-    _tripTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      Position position = await Geolocator.getCurrentPosition(
-          // ignore: deprecated_member_use
-          desiredAccuracy: LocationAccuracy.high);
-
-      if (_lastPosition != null) {
-        double distanceInMeters = Geolocator.distanceBetween(
-          _lastPosition!.latitude,
-          _lastPosition!.longitude,
-          position.latitude,
-          position.longitude,
-        );
-
-        // Convert meters to km
-        totalDistance += distanceInMeters / 1000;
-
-        // Calculate speed (m/s to km/h)
-        double timeDifference =
-            DateTime.now().difference(startTime!).inSeconds as double;
-        if (timeDifference > 0) {
-          avgSpeed = (totalDistance * 1000) / timeDifference * 3.6;
-        }
-
-        // Simulated hard brake detection
-        if (distanceInMeters < 3) {
-          hardBrakes++;
-        }
-
-        // Simulated sharp turn detection
-        double directionChange =
-            (position.heading - _lastPosition!.heading).abs();
-        if (directionChange > 30) {
-          sharpTurns++;
-        }
-      }
-      _lastPosition = position;
-    });
-  }
-
-  String getFeedback() {
-    if (hardBrakes == 0 && sharpTurns == 0) {
-      return "Great job! Your driving was smooth and safe.";
-    } else if (hardBrakes > 0 && sharpTurns == 0) {
-      return "You hit hard brakes $hardBrakes time(s). Maintain a safe distance!";
-    } else if (sharpTurns > 0 && hardBrakes == 0) {
-      return "You made $sharpTurns sharp turn(s). Try to plan your turns earlier!";
-    } else {
-      return "You had $hardBrakes hard brakes and $sharpTurns sharp turns. Drive with caution!";
     }
   }
 
@@ -307,7 +235,8 @@ class _HomecontentState extends State<Homecontent> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 20.0),
                               child: Text(
-                                getFeedback(),
+                                //feedbackmessage function here
+                                "Feedback: Good driving!",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Montserrat',
@@ -321,7 +250,8 @@ class _HomecontentState extends State<Homecontent> {
                         ],
                         const SizedBox(height: 20),
                         ElevatedButton(
-                          onPressed: toggleTrip,
+                          onPressed: UserStartDrive(userId: currentUser!.uid)
+                              .startTracking,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isTripActive
                                 ? Colors.redAccent
