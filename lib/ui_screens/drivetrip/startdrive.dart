@@ -87,6 +87,16 @@ class UserStartDrive with WidgetsBindingObserver {
     _userAccelerometerSubscription?.cancel();
     _gyroscopeSubscription?.cancel();
     tripRef.update({"endTime": DateTime.now().toIso8601String()});
+
+    //save the trip data to the user's trip history under DriveTrips subcollection
+    tripRef.get().then((snapshot) {
+      if (snapshot.exists) {
+        FirebaseDatabase.instance
+            .ref("Users/$userId/DriveTrips")
+            .push()
+            .set(snapshot.value);
+      }
+    });
   }
 
   @override
