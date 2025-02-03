@@ -24,13 +24,13 @@ class UserStartDrive with WidgetsBindingObserver {
       "speedData": [],
     });
 
-    //manually simulate the accelerometer and gyroscope events ever seconds
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      _processAcceleration(
-          UserAccelerometerEvent(0.0, 0.0, -12.0, 0.0 as DateTime));
-      _processRotation(GyroscopeEvent(3.0, 0.0, 0.0, 0.0 as DateTime));
-      _simulateSpeedData();
-    });
+    // //manually simulate the accelerometer and gyroscope events ever seconds
+    // Timer.periodic(Duration(seconds: 1), (timer) {
+    //   _processAcceleration(
+    //       UserAccelerometerEvent(0.0, 0.0, -12.0, 0.0 as DateTime));
+    //   _processRotation(GyroscopeEvent(3.0, 0.0, 0.0, 0.0 as DateTime));
+    //   _simulateSpeedData();
+    // });
 
     _userAccelerometerSubscription = userAccelerometerEventStream().listen(
       (event) => _processAcceleration(event),
@@ -44,20 +44,20 @@ class UserStartDrive with WidgetsBindingObserver {
   }
 
   //simulate speed data to test the app in the absence of a real-time speed sensor
-  void _simulateSpeedData() {
-    // Simulate random speed values
-    List<int> fakeSpeeds = [20, 40, 60, 80, 100, 120, 140];
-    int randomSpeed = (fakeSpeeds..shuffle()).first;
+  // void _simulateSpeedData() {
+  //   // Simulate random speed values
+  //   List<int> fakeSpeeds = [20, 40, 60, 80, 100, 120, 140];
+  //   int randomSpeed = (fakeSpeeds..shuffle()).first;
 
-    tripRef.child("speedData").get().then((snapshot) {
-      List<dynamic> currentSpeeds =
-          snapshot.exists ? List<dynamic>.from(snapshot.value as List) : [];
-      currentSpeeds.add(randomSpeed);
-      tripRef.update({"speedData": currentSpeeds});
-    });
+  //   tripRef.child("speedData").get().then((snapshot) {
+  //     List<dynamic> currentSpeeds =
+  //         snapshot.exists ? List<dynamic>.from(snapshot.value as List) : [];
+  //     currentSpeeds.add(randomSpeed);
+  //     tripRef.update({"speedData": currentSpeeds});
+  //   });
 
-    log("🚗 Simulated Speed: $randomSpeed km/h");
-  }
+  //   log("🚗 Simulated Speed: $randomSpeed km/h");
+  // }
 
   void _processAcceleration(UserAccelerometerEvent event) {
     log("Acceleration: x=${event.x}, y=${event.y}, z=${event.z}");
