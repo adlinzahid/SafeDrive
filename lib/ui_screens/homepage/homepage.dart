@@ -256,8 +256,18 @@ class _HomecontentState extends State<Homecontent> {
                         ],
                         const SizedBox(height: 20),
                         ElevatedButton(
-                          onPressed: UserStartDrive(userId: currentUser!.uid)
-                              .startTracking,
+                          onPressed: () {
+                            if (isTripActive) {
+                              UserStartDrive(userId: currentUser!.uid)
+                                  .stopTracking();
+                            } else {
+                              UserStartDrive(userId: currentUser!.uid)
+                                  .startTracking();
+                            }
+                            setState(() {
+                              isTripActive = !isTripActive;
+                            });
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isTripActive
                                 ? Colors.redAccent
