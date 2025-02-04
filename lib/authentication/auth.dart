@@ -44,6 +44,7 @@ class AuthActivity {
         'address': address,
         'profilePicture': profilePicture, // Empty at first
         'uid': userCredential.user?.uid,
+        'userId': uniqueId,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
