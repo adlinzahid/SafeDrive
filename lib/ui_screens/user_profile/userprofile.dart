@@ -29,56 +29,55 @@ class _UserProfileState extends State<UserProfile> {
   User? currentUser;
   String? currentUserPhoto; // Store base64 profile image
 
+  @override
+  void initState() {
+    super.initState();
+    currentUser = _auth.currentUser;
 
- @override
-void initState() {
-  super.initState();
-  currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      // If the user is not authenticated, show a message or navigate to login
+      Navigator.of(context)
+          .pushReplacementNamed('/login'); // Navigate to login page
+      return;
+    }
 
-  if (currentUser == null) {
-    // If the user is not authenticated, show a message or navigate to login
-    Navigator.of(context).pushReplacementNamed('/login'); // Navigate to login page
-    return;
+    // Initialize text controllers with current user data
+    if (currentUser?.displayName != null) {
+      _nameController.text = currentUser!.displayName!;
+    }
+    if (currentUser?.email != null) {
+      _emailController.text = currentUser!.email!;
+    }
   }
 
-  // Initialize text controllers with current user data
-  if (currentUser?.displayName != null) {
-    _nameController.text = currentUser!.displayName!;
+  Future<void> _updateUserData() async {
+    if (currentUser == null) {
+      log("No authenticated user found.");
+      return;
+    }
+
+    try {
+      log("Updating user profile for UID: ${currentUser!.uid}");
+
+      await _firestore.collection('Users').doc(currentUser!.uid).update({
+        'username': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'vehicleNumber': _vehicleController.text.trim(),
+      });
+
+      log("User profile updated successfully!");
+
+      setState(() {
+        isEditing = false;
+      });
+
+      _showSnackbar("Profile updated successfully!");
+    } catch (e) {
+      log('Error updating profile: $e'); // Logs the exact error
+      _showErrorSnackbar("Failed to update profile. $e");
+    }
   }
-  if (currentUser?.email != null) {
-    _emailController.text = currentUser!.email!;
-  }
-}
-
-Future<void> _updateUserData() async {
-  if (currentUser == null) {
-    log("No authenticated user found.");
-    return;
-  }
-
-  try {
-    log("Updating user profile for UID: ${currentUser!.uid}");
-
-    await _firestore.collection('Users').doc(currentUser!.uid).update({
-      'username': _nameController.text.trim(),
-      'phone': _phoneController.text.trim(),
-      'email': _emailController.text.trim(),
-      'vehicleNumber': _vehicleController.text.trim(),
-    });
-
-    log("User profile updated successfully!");
-
-    setState(() {
-      isEditing = false;
-    });
-
-    _showSnackbar("Profile updated successfully!");
-  } catch (e) {
-    log('Error updating profile: $e'); // Logs the exact error
-    _showErrorSnackbar("Failed to update profile. $e");
-  }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -123,19 +122,21 @@ Future<void> _updateUserData() async {
               child: Column(
                 children: [
                   GestureDetector(
-  onTap: _pickImage,
-  child: CircleAvatar(
-    radius: 50,
-    backgroundColor: Colors.grey[300],
-    backgroundImage: currentUserPhoto != null
-        ? MemoryImage(base64Decode(currentUserPhoto!)) // Show base64 image
-        : const AssetImage('assets/images/profile_pic.png') as ImageProvider,
-    child: currentUserPhoto == null
-        ? const Icon(Icons.camera_alt, color: Colors.white, size: 30)
-        : null, // Hide icon if image exists
-  ),
-),
-
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: currentUserPhoto != null
+                          ? MemoryImage(base64Decode(
+                              currentUserPhoto!)) // Show base64 image
+                          : const AssetImage('assets/images/profile_pic.png')
+                              as ImageProvider,
+                      child: currentUserPhoto == null
+                          ? const Icon(Icons.camera_alt,
+                              color: Colors.white, size: 30)
+                          : null, // Hide icon if image exists
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _nameController,
@@ -148,7 +149,8 @@ Future<void> _updateUserData() async {
                     decoration: const InputDecoration(border: InputBorder.none),
                   ),
                   IconButton(
-                    icon: Icon(isEditing ? Icons.save : Icons.edit, color: Colors.white),
+                    icon: Icon(isEditing ? Icons.save : Icons.edit,
+                        color: Colors.white),
                     onPressed: () async {
                       if (isEditing) {
                         await _updateUserData();
@@ -158,7 +160,6 @@ Future<void> _updateUserData() async {
                       });
                     },
                   ),
-
                 ],
               ),
             ),
@@ -254,52 +255,55 @@ Future<void> _updateUserData() async {
   }
 
 //loadUserProfile
-Future<void> _loadUserProfile() async {
-  DocumentSnapshot doc = await _firestore.collection('Users').doc(currentUser!.uid).get();
+  Future<void> _loadUserProfile() async {
+    DocumentSnapshot doc =
+        await _firestore.collection('Users').doc(currentUser!.uid).get();
 
-  if (doc.exists) {
-    setState(() {
-      currentUserPhoto = doc['profilePicture']; // Fetch stored base64 image
-    });
+    if (doc.exists) {
+      setState(() {
+        currentUserPhoto = doc['profilePicture']; // Fetch stored base64 image
+      });
+    }
   }
-}
 
   //_pickimage function
-Future<void> _pickImage() async {
-  final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-  if (pickedFile == null) return;
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
 
-  File imageFile = File(pickedFile.path);
-  List<int> imageBytes = await imageFile.readAsBytes();
-  String base64Image = base64Encode(imageFile.readAsBytesSync()); // Convert to base64
+    File imageFile = File(pickedFile.path);
+    List<int> imageBytes = await imageFile.readAsBytes();
+    String base64Image =
+        base64Encode(imageFile.readAsBytesSync()); // Convert to base64
 
-  try {
-    await _firestore.collection('Users').doc(currentUser!.uid).update({
-      'profilePicture': base64Image,
-    });
+    try {
+      await _firestore.collection('Users').doc(currentUser!.uid).update({
+        'profilePicture': base64Image,
+      });
 
-    setState(() {
-      currentUserPhoto = base64Image; // Store image in state for UI update
-    });
+      setState(() {
+        currentUserPhoto = base64Image; // Store image in state for UI update
+      });
 
-    _showSnackbar('Profile picture updated');
-  } catch (e) {
-    log('Error uploading image: $e');
-    _showErrorSnackbar('Failed to update profile picture');
+      _showSnackbar('Profile picture updated');
+    } catch (e) {
+      log('Error uploading image: $e');
+      _showErrorSnackbar('Failed to update profile picture');
+    }
   }
-}
 
-  Future<void> updateUserProfile(String userId, String name, String phone, String vehicleNumber) async {
-  try {
-    await FirebaseFirestore.instance.collection('Users').doc(userId).update({
-      'username': name,
-      'phone': phone,
-      'vehicleNumber': vehicleNumber,
-    });
-    print("User profile updated successfully!");
-  } catch (e) {
-    print("Error updating profile: $e");
+  Future<void> updateUserProfile(
+      String userId, String name, String phone, String vehicleNumber) async {
+    try {
+      await FirebaseFirestore.instance.collection('Users').doc(userId).update({
+        'username': name,
+        'phone': phone,
+        'vehicleNumber': vehicleNumber,
+      });
+      print("User profile updated successfully!");
+    } catch (e) {
+      print("Error updating profile: $e");
+    }
   }
-}
-
 }
