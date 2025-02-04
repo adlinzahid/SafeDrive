@@ -44,6 +44,9 @@ dependencies:
   uuid: ^4.5.1
   firebase_core: ^3.10.1
   google_sign_in: ^6.2.2
+  #image_picker: ^1.1.2
+  firebase_database: ^11.3.1
+  sensors_plus: ^6.1.1
   flutter_map: ^8.0.0
   latlong2: ^0.9.1
   firebase_storage: ^12.4.1
@@ -58,7 +61,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

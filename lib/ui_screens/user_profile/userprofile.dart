@@ -2,9 +2,11 @@ import 'dart:developer';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_drive/services/profile_image_service.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -20,20 +22,63 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _vehicleController = TextEditingController();
+  //final TextEditingController _addressController = TextEditingController();
 
   bool isEditing = false;
   User? currentUser;
+  String? currentUserPhoto; // Store base64 profile image
 
-  @override
-  void initState() {
-    super.initState();
-    currentUser = _auth.currentUser;
-    //Initialise the text controllers with the user data
-    if (currentUser?.displayName != null) {
-      _nameController.text = currentUser!.displayName!;
-    }
+
+ @override
+void initState() {
+  super.initState();
+  currentUser = _auth.currentUser;
+
+  if (currentUser == null) {
+    // If the user is not authenticated, show a message or navigate to login
+    Navigator.of(context).pushReplacementNamed('/login'); // Navigate to login page
+    return;
   }
+
+  // Initialize text controllers with current user data
+  if (currentUser?.displayName != null) {
+    _nameController.text = currentUser!.displayName!;
+  }
+  if (currentUser?.email != null) {
+    _emailController.text = currentUser!.email!;
+  }
+}
+
+Future<void> _updateUserData() async {
+  if (currentUser == null) {
+    log("No authenticated user found.");
+    return;
+  }
+
+  try {
+    log("Updating user profile for UID: ${currentUser!.uid}");
+
+    await _firestore.collection('Users').doc(currentUser!.uid).update({
+      'username': _nameController.text.trim(),
+      'phone': _phoneController.text.trim(),
+      'email': _emailController.text.trim(),
+      'vehicleNumber': _vehicleController.text.trim(),
+    });
+
+    log("User profile updated successfully!");
+
+    setState(() {
+      isEditing = false;
+    });
+
+    _showSnackbar("Profile updated successfully!");
+  } catch (e) {
+    log('Error updating profile: $e'); // Logs the exact error
+    _showErrorSnackbar("Failed to update profile. $e");
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -78,15 +123,19 @@ class _UserProfileState extends State<UserProfile> {
               child: Column(
                 children: [
                   GestureDetector(
-                    onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: currentUser?.photoURL != null
-                          ? NetworkImage(currentUser!.photoURL!)
-                          : const AssetImage('assets/images/profile_pic.png') as ImageProvider,
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 30),
-                    ),
-                  ),
+  onTap: _pickImage,
+  child: CircleAvatar(
+    radius: 50,
+    backgroundColor: Colors.grey[300],
+    backgroundImage: currentUserPhoto != null
+        ? MemoryImage(base64Decode(currentUserPhoto!)) // Show base64 image
+        : const AssetImage('assets/images/profile_pic.png') as ImageProvider,
+    child: currentUserPhoto == null
+        ? const Icon(Icons.camera_alt, color: Colors.white, size: 30)
+        : null, // Hide icon if image exists
+  ),
+),
+
                   const SizedBox(height: 10),
                   TextField(
                     controller: _nameController,
@@ -126,7 +175,7 @@ class _UserProfileState extends State<UserProfile> {
                       currentUser?.email ?? 'Email', _emailController),
                   _buildEditableField(Icons.phone, 'Phone', _phoneController),
                   _buildEditableField(
-                      Icons.location_on, 'Address', _addressController),
+                      Icons.drive_eta, 'Vehicle Number', _vehicleController),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -204,89 +253,53 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
+//loadUserProfile
+Future<void> _loadUserProfile() async {
+  DocumentSnapshot doc = await _firestore.collection('Users').doc(currentUser!.uid).get();
+
+  if (doc.exists) {
+    setState(() {
+      currentUserPhoto = doc['profilePicture']; // Fetch stored base64 image
+    });
+  }
+}
+
   //_pickimage function
 Future<void> _pickImage() async {
   final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
   if (pickedFile == null) return;
 
   File imageFile = File(pickedFile.path);
-  String fileName = 'profile_pics/${currentUser!.uid}.jpg';
+  List<int> imageBytes = await imageFile.readAsBytes();
+  String base64Image = base64Encode(imageFile.readAsBytesSync()); // Convert to base64
 
   try {
-    // Upload image to Firebase Storage
-    TaskSnapshot snapshot = await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
-    
-    // Get download URL
-    String downloadUrl = await snapshot.ref.getDownloadURL();
-    
-    // Update Firebase Authentication profile photo URL
-    await currentUser!.updatePhotoURL(downloadUrl);
-    await currentUser!.reload(); // Reload user info
+    await _firestore.collection('Users').doc(currentUser!.uid).update({
+      'profilePicture': base64Image,
+    });
 
-    // Get Firestore document ID
-    QuerySnapshot userDoc = await _firestore.collection('Users').where('uid', isEqualTo: currentUser!.uid).get();
-    
-    if (userDoc.docs.isNotEmpty) {
-      String docId = userDoc.docs.first.id; // Retrieve Firestore document ID
+    setState(() {
+      currentUserPhoto = base64Image; // Store image in state for UI update
+    });
 
-      // Update Firestore user profile
-      await _firestore.collection('Users').doc(docId).update({
-        'profilePicture': downloadUrl,
-      });
-
-      setState(() {
-        currentUser = FirebaseAuth.instance.currentUser;
-      });
-
-      _showSnackbar('Profile picture updated successfully');
-    } else {
-      _showErrorSnackbar('User data not found in Firestore');
-    }
+    _showSnackbar('Profile picture updated');
   } catch (e) {
     log('Error uploading image: $e');
     _showErrorSnackbar('Failed to update profile picture');
   }
 }
 
-  Future<void> _updateUserData() async {
+  Future<void> updateUserProfile(String userId, String name, String phone, String vehicleNumber) async {
   try {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // Fetch the correct document based on user's UID
-      QuerySnapshot userDoc = await _firestore
-          .collection('Users')
-          .where('uid', isEqualTo: user.uid)
-          .get();
-
-      if (userDoc.docs.isNotEmpty) {
-        String docId = userDoc.docs.first.id; // Correct way to get Firestore doc ID
-
-        // Update user data in Firestore
-        await _firestore.collection('Users').doc(docId).update({
-          'username': _nameController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'address': _addressController.text,
-        });
-
-        // Update FirebaseAuth displayName
-        await user.updateDisplayName(_nameController.text);
-        await user.reload(); // Reload user info
-
-        // Show success message
-        _showSnackbar('User data updated successfully');
-
-        // Refresh UI
-        setState(() {
-          currentUser = FirebaseAuth.instance.currentUser;
-        });
-      } else {
-        _showErrorSnackbar('User data not found in Firestore');
+    await FirebaseFirestore.instance.collection('Users').doc(userId).update({
+      'username': name,
+      'phone': phone,
+      'vehicleNumber': vehicleNumber,
+    });
+    print("User profile updated successfully!");
+  } catch (e) {
+    print("Error updating profile: $e");
   }
 }
-} catch (e) {
-    log('Error updating user data: $e');
-      _showErrorSnackbar('Error updating user data');
-    }
-  }
+
 }
