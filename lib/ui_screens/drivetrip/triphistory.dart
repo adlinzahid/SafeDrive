@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
 
 class TripDetails extends StatefulWidget {
   final DateTime tripDateTime;
@@ -166,6 +167,18 @@ class _TripDetailsState extends State<TripDetails> {
                         color: Colors.white70,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                DriveTrip()), // Navigate to the trip summary screen
+                      );
+                    },
+                    child: Text("Trip Summary"),
                   ),
                 ],
               ),

@@ -3,13 +3,15 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:safe_drive/ui_screens/drivetrip/drivetrip.dart';
-import 'package:safe_drive/ui_screens/drivetrip/startdrive.dart';
+import 'package:safe_drive/database/tripdata.dart';
+import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
+import 'package:safe_drive/ui_screens/drivetrip/driving.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart'
     as safedrive_settings;
 // import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:safe_drive/ui_screens/user_profile/userprofile.dart';
+import 'package:safe_drive/services/drivingtracker.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -98,6 +100,8 @@ class _HomecontentState extends State<Homecontent> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? currentUser;
+
+  final DrivingTracker drivingTracker = DrivingTracker();
 
   //String vehiclePlate = "vba 585"; // Define the vehicle plate
 
@@ -257,25 +261,37 @@ class _HomecontentState extends State<Homecontent> {
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
-                            if (isTripActive) {
-                              UserStartDrive(userId: currentUser!.uid)
-                                  .stopTracking();
-                            } else {
-                              UserStartDrive(userId: currentUser!.uid)
-                                  .startTracking();
-                            }
-                            setState(() {
-                              isTripActive = !isTripActive;
-                            });
+                            TripData tripData = TripData();
+                            tripData.simulateStopTrip();
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isTripActive
-                                ? Colors.redAccent
-                                : Colors.yellowAccent[700],
-                            foregroundColor: Colors.deepPurple,
+                          child: Text(
+                            "Simulate Trip",
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          child:
-                              Text(isTripActive ? 'Stop Trip' : 'Start Trip'),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            //call driving.dart file
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DrivingScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Start Trip",
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),

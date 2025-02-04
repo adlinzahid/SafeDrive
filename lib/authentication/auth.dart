@@ -11,6 +11,12 @@ class AuthActivity {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  String? phone;
+  String? address;
+  String? profilePicture;
+
+  AuthActivity({this.phone, this.address, this.profilePicture});
+
   //Register user account with email and password
   Future<User?> registerUserWithEmailAndPassword(
       String email, String password, String username) async {
@@ -31,24 +37,22 @@ class AuthActivity {
 
       // Save the user data to Firestore with the unique ID
       await _firestore.collection('Users').doc(uniqueId).set({
+        //use uniqueId as the document ID, dont change it
         'username': username,
         'email': email,
-        'userId':
-            uniqueId, // save the user's unique ID for identification purposes
+        'phone': phone,
+        'address': address,
+        'profilePicture': profilePicture, // Empty at first
         'uid': userCredential.user?.uid,
+        'userId': uniqueId,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
       return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        throw 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        throw 'The account already exists for that email.';
-      }
     } catch (e) {
-      rethrow;
+      log('Error registering user: $e');
+      return null;
     }
-    return null;
   }
 
   //Sign in user account with username and password

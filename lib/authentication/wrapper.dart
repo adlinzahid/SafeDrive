@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safe_drive/authentication/auth.dart';
+import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
+import 'package:safe_drive/ui_screens/drivetrip/driving.dart';
 import 'package:safe_drive/ui_screens/homepage/homepage.dart';
 import 'package:safe_drive/ui_screens/homepage/splashscreen.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart';
@@ -35,6 +37,8 @@ class Wrapper extends StatelessWidget {
               '/login': (context) => const Loginpage(),
               '/register': (context) => const Registerpage(),
               '/home': (context) => const Homepage(),
+              '/driving': (context) => const DrivingScreen(),
+              '/tripSummary': (context) => const DriveTrip(),
             },
           );
         } else {

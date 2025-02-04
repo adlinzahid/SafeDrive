@@ -56,7 +56,7 @@ class _SettingsState extends State<Settings> {
                 trailing:
                     const Icon(Icons.arrow_forward_ios, color: Colors.white),
                 onTap: () {
-                  Navigator.pushNamed(context, 'Notifications'); // route
+                  Navigator.pushNamed(context, '/notifications'); // route
                 },
               ),
               ListTile(
