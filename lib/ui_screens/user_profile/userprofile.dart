@@ -1,5 +1,7 @@
 import 'dart:developer';
-
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,7 +25,6 @@ class _UserProfileState extends State<UserProfile> {
   bool isEditing = false;
   User? currentUser;
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -76,10 +77,15 @@ class _UserProfileState extends State<UserProfile> {
               padding: const EdgeInsets.only(top: 50, bottom: 20),
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundImage:
-                        AssetImage('assets/images/profile_pic.png'),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: currentUser?.photoURL != null
+                          ? NetworkImage(currentUser!.photoURL!)
+                          : const AssetImage('assets/images/profile_pic.png') as ImageProvider,
+                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 30),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
@@ -93,8 +99,7 @@ class _UserProfileState extends State<UserProfile> {
                     decoration: const InputDecoration(border: InputBorder.none),
                   ),
                   IconButton(
-                    icon: Icon(isEditing ? Icons.save : Icons.edit,
-                        color: Colors.white),
+                    icon: Icon(isEditing ? Icons.save : Icons.edit, color: Colors.white),
                     onPressed: () async {
                       if (isEditing) {
                         await _updateUserData();
@@ -104,6 +109,7 @@ class _UserProfileState extends State<UserProfile> {
                       });
                     },
                   ),
+
                 ],
               ),
             ),
@@ -148,7 +154,8 @@ class _UserProfileState extends State<UserProfile> {
         enabled: isEditing,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.purple),
-          labelText: label,
+          labelText: isEditing ? null : label, // Hide label when editing
+          hintText: label, // Show hint text
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           filled: true,
           fillColor: Colors.white,
@@ -197,32 +204,88 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
-  Future<void> _updateUserData() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        //fetch the correct document Id based on the user's uid
-        QuerySnapshot userDoc = await _firestore
-            .collection('Users')
-            .where('userId', isEqualTo: user.uid)
-            .get();
+  //_pickimage function
+Future<void> _pickImage() async {
+  final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+  if (pickedFile == null) return;
 
-        if (userDoc.docs.isNotEmpty) {
-          String docId = userDoc.docs.first.id; // get the generated document id
-          //update the user data
-          await _firestore.collection('Users').doc(docId).update({
-            'username': _nameController.text,
-            'email': _emailController.text,
-            'phone': _phoneController.text,
-            'address': _addressController.text,
-          });
-          _showSnackbar('User data updated successfully');
-        } else {
-          _showErrorSnackbar('User data not found');
-        }
-      }
-    } catch (e) {
-      log('Error updating user data: $e');
+  File imageFile = File(pickedFile.path);
+  String fileName = 'profile_pics/${currentUser!.uid}.jpg';
+
+  try {
+    // Upload image to Firebase Storage
+    TaskSnapshot snapshot = await FirebaseStorage.instance.ref(fileName).putFile(imageFile);
+    
+    // Get download URL
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    
+    // Update Firebase Authentication profile photo URL
+    await currentUser!.updatePhotoURL(downloadUrl);
+    await currentUser!.reload(); // Reload user info
+
+    // Get Firestore document ID
+    QuerySnapshot userDoc = await _firestore.collection('Users').where('uid', isEqualTo: currentUser!.uid).get();
+    
+    if (userDoc.docs.isNotEmpty) {
+      String docId = userDoc.docs.first.id; // Retrieve Firestore document ID
+
+      // Update Firestore user profile
+      await _firestore.collection('Users').doc(docId).update({
+        'profilePicture': downloadUrl,
+      });
+
+      setState(() {
+        currentUser = FirebaseAuth.instance.currentUser;
+      });
+
+      _showSnackbar('Profile picture updated successfully');
+    } else {
+      _showErrorSnackbar('User data not found in Firestore');
+    }
+  } catch (e) {
+    log('Error uploading image: $e');
+    _showErrorSnackbar('Failed to update profile picture');
+  }
+}
+
+  Future<void> _updateUserData() async {
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Fetch the correct document based on user's UID
+      QuerySnapshot userDoc = await _firestore
+          .collection('Users')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        String docId = userDoc.docs.first.id; // Correct way to get Firestore doc ID
+
+        // Update user data in Firestore
+        await _firestore.collection('Users').doc(docId).update({
+          'username': _nameController.text,
+          'email': _emailController.text,
+          'phone': _phoneController.text,
+          'address': _addressController.text,
+        });
+
+        // Update FirebaseAuth displayName
+        await user.updateDisplayName(_nameController.text);
+        await user.reload(); // Reload user info
+
+        // Show success message
+        _showSnackbar('User data updated successfully');
+
+        // Refresh UI
+        setState(() {
+          currentUser = FirebaseAuth.instance.currentUser;
+        });
+      } else {
+        _showErrorSnackbar('User data not found in Firestore');
+  }
+}
+} catch (e) {
+    log('Error updating user data: $e');
       _showErrorSnackbar('Error updating user data');
     }
   }
