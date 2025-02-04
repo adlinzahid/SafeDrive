@@ -50,6 +50,8 @@ dependencies:
   sensors_plus: ^6.1.1
   flutter_map: ^8.0.0
   latlong2: ^0.9.1
+  location: ^8.0.0
+  fluttertoast: ^8.2.10
 
 dev_dependencies:
   flutter_test:
