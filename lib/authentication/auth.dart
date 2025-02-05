@@ -1,8 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:developer';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -10,16 +12,18 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthActivity {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String? phone;
   String? vehicleNumber;
   String? profilePicture;
+  String? vehicle;
 
   AuthActivity({this.phone, this.profilePicture});
 
-  //Register user account with email and password
   Future<User?> registerUserWithEmailAndPassword(
-      String email, String password, String username) async {
+      String email, String password, String username,
+      {String? phone, String? address, String? profilePicture}) async {
     try {
       final UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
@@ -28,17 +32,15 @@ class AuthActivity {
         //phoneNumber: phone,
       );
 
-      await userCredential.user!.updateDisplayName(username);
-      await userCredential.user!.reload();
+      await userCredential.user?.updateDisplayName(username);
+      await userCredential.user?.reload();
 
       // Generate a unique ID for the user
       var uuid = const Uuid();
-      String uniqueId =
-          'UID${uuid.v4().substring(0, 6).toUpperCase()}'; //UID + 6 random characters
+      String uniqueId = 'UID${uuid.v4().substring(0, 6).toUpperCase()}';
 
-      // Save the user data to Firestore with the unique ID
+      // Save the user data to Firestore
       await _firestore.collection('Users').doc(uniqueId).set({
-        //use uniqueId as the document ID, dont change it
         'username': username,
         'email': email,
         'phone': phone,
@@ -48,9 +50,36 @@ class AuthActivity {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      log('User $username with user ID $uniqueId registered successfully');
+
       return userCredential.user;
     } catch (e) {
       log('Error registering user: $e');
+      return null;
+    }
+  }
+
+  //Get current logged in user's unique ID for query data
+  Future<String?> getCurrentUserUniqueId() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null; // User not logged in
+
+    try {
+      // Fetch user document using Firebase UID
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid) // Using UID to directly access the document
+          .get();
+
+      if (userDoc.exists) {
+        String uniqueId = userDoc['uniqueId']; // Get the uniqueId
+        log('User uniqueId: $uniqueId fetched successfully');
+        return uniqueId;
+      } else {
+        return null; // No document found
+      }
+    } catch (e) {
+      log('Error fetching uniqueId: $e');
       return null;
     }
   }
@@ -113,49 +142,17 @@ class AuthActivity {
   //Sign in with Google
   Future<UserCredential?> signInWithGoogle(BuildContext context) async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        log("User canceled the Google Sign-In process.");
-        return null; // Handle case when user cancels sign-in
-      }
+      final googleUser = await GoogleSignIn().signIn();
+      final googleAuth = await googleUser?.authentication;
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      final cred = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
       );
 
-      //save user data to Firestore if the user is new
-      final UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        final DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestore
-            .collection('Users')
-            .where('email', isEqualTo: user.email)
-            .get()
-            .then((value) => value.docs.first);
-
-        if (!userDoc.exists) {
-          // Generate a unique ID for the user
-          var uuid = const Uuid();
-          String uniqueId =
-              'UID${uuid.v4().substring(0, 6).toUpperCase()}'; //UID + 6 random characters
-
-          await _firestore.collection('Users').doc(uniqueId).set({
-            'username': user.displayName,
-            'email': user.email,
-            'userId': uniqueId,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-        }
-      }
-      return await _auth.signInWithCredential(credential);
+      return await _auth.signInWithCredential(cred);
     } catch (e) {
-      log("Error signing in with Google: $e");
+      log("Error signing in with Google");
       _errorSnackbar(context, "Error signing in with Google");
     }
     return null;
@@ -168,11 +165,6 @@ class AuthActivity {
     } catch (e) {
       log("Something went wrong while signing out");
     }
-  }
-
-  //Get the current user
-  User? getCurrentUser() {
-    return FirebaseAuth.instance.currentUser;
   }
 
 //show error snackbar message
@@ -194,6 +186,32 @@ class AuthActivity {
         showCloseIcon: true,
       ),
     );
+  }
+
+  // Upload profile picture to Firebase Storage
+  Future<String?> uploadProfilePicture(File imageFile) async {
+    String? uniqueId = await getCurrentUserUniqueId();
+    if (uniqueId == null) {
+      log("Error: User uniqueId not found");
+      return null;
+    }
+
+    try {
+      String filePath = 'profile_pictures/$uniqueId.jpg';
+      TaskSnapshot uploadTask = await _storage.ref(filePath).putFile(imageFile);
+      String downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      // Update Firestore with new image URL
+      await _firestore.collection('Users').doc(uniqueId).update({
+        'profilePicture': downloadUrl,
+      });
+
+      log("Profile picture updated successfully!");
+      return downloadUrl;
+    } catch (e) {
+      log("Error uploading profile picture: $e");
+      return null;
+    }
   }
 
   //is user logged in

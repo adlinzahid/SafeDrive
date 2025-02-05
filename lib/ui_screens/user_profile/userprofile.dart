@@ -23,8 +23,14 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _vehicleController = TextEditingController();
+<<<<<<< HEAD
   final TextEditingController _vehicleNumberController = TextEditingController();
   
+=======
+  final TextEditingController _vehicleNumberController =
+      TextEditingController();
+
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
   bool isEditing = false;
   User? currentUser;
   String? currentUserPhoto; // Store base64 profile image
@@ -42,7 +48,7 @@ class _UserProfileState extends State<UserProfile> {
     }
 
     // Load user data from Firestore
-  fetchUserProfile();
+    fetchUserProfile();
   }
 
   Future<void> _updateUserData() async {
@@ -65,7 +71,7 @@ class _UserProfileState extends State<UserProfile> {
       log("User profile updated successfully!");
 
 // Fetch updated data from Firestore and update UI
-    await fetchUserProfile();
+      await fetchUserProfile();
 
       setState(() {
         isEditing = false;
@@ -125,15 +131,16 @@ class _UserProfileState extends State<UserProfile> {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey[300],
-                      backgroundImage: currentUserPhoto != null
+                      backgroundImage: currentUserPhoto != null &&
+                              currentUserPhoto!.isNotEmpty
                           ? MemoryImage(base64Decode(
-                              currentUserPhoto!)) // Show base64 image
+                              currentUserPhoto!)) // Correct base64 image
                           : const AssetImage('assets/images/profile_pic.png')
                               as ImageProvider,
                       child: currentUserPhoto == null
                           ? const Icon(Icons.camera_alt,
                               color: Colors.white, size: 30)
-                          : null, // Hide icon if image exists
+                          : null,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -274,27 +281,40 @@ class _UserProfileState extends State<UserProfile> {
     File imageFile = File(pickedFile.path);
     List<int> imageBytes = await imageFile.readAsBytes();
     String base64Image =
-        base64Encode(imageFile.readAsBytesSync()); // Convert to base64
+        base64Encode(imageBytes); // Convert to base64 correctly
 
     try {
-      await _firestore.collection('Users').doc(currentUser!.uid).update({
-        'profilePicture': base64Image,
-      });
+      // Fetch correct user document using email
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
 
-      setState(() {
-        currentUserPhoto = base64Image; // Store image in state for UI update
-      });
+      if (userQuery.docs.isNotEmpty) {
+        String userId = userQuery.docs.first.id; // Get correct document ID
 
-      _showSnackbar('Profile picture updated');
+        // Update Firestore with base64 image
+        await _firestore.collection('Users').doc(userId).update({
+          'profilePicture': base64Image,
+        });
+
+        setState(() {
+          currentUserPhoto = base64Image;
+        });
+
+        _showSnackbar('Profile picture updated');
+      }
     } catch (e) {
       log('Error uploading image: $e');
       _showErrorSnackbar('Failed to update profile picture');
     }
   }
 
+//update user profile
   Future<void> updateUserProfile(
-      String userId, String name, String phone, String vehicleNumber) async {
+      String name, String phone, String vehicleNumber) async {
     try {
+<<<<<<< HEAD
       await FirebaseFirestore.instance.collection('Users').doc(userId).update({
         'username': name,
         'phone': phone,
@@ -304,29 +324,54 @@ class _UserProfileState extends State<UserProfile> {
     } catch (e) {
       print("Error updating profile: $e");
     }
+=======
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
 
-}
+      if (userQuery.docs.isNotEmpty) {
+        String userId = userQuery.docs.first.id; // Fetch correct ID
+
+        await _firestore.collection('Users').doc(userId).update({
+          'username': name,
+          'phone': phone,
+          'vehicleNumber': vehicleNumber,
+        });
+
+        _showSnackbar("User profile updated successfully!");
+      }
+    } catch (e) {
+      log("Error updating profile: $e");
+      _showErrorSnackbar("Failed to update profile.");
+    }
+  }
 
 //fetchUserprofile
-Future<void> fetchUserProfile() async {
-  if (currentUser == null) return;
+  Future<void> fetchUserProfile() async {
+    if (currentUser == null) return;
 
-  try {
-    DocumentSnapshot userDoc =
-        await _firestore.collection('Users').doc(currentUser!.uid).get();
+    try {
+      // Fetch the user's document based on their email
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
 
-    if (userDoc.exists) {
-      setState(() {
-        _nameController.text = userDoc['username'] ?? '';
-        _emailController.text = userDoc['email'] ?? '';
-        _phoneController.text = userDoc['phone'] ?? '';  // Ensure this is fetched
-        _vehicleController.text = userDoc['vehicleNumber'] ?? ''; // Fix here
-      });
+      if (userQuery.docs.isNotEmpty) {
+        DocumentSnapshot userDoc = userQuery.docs.first;
+
+        setState(() {
+          _nameController.text = userDoc['username'] ?? '';
+          _emailController.text = userDoc['email'] ?? '';
+          _phoneController.text = userDoc['phone'] ?? '';
+          _vehicleController.text = userDoc['vehicleNumber'] ?? '';
+          currentUserPhoto = userDoc['profilePicture']; // Fix image fetching
+        });
+      }
+    } catch (e) {
+      log("Error fetching user profile: $e");
     }
-  } catch (e) {
-    log("Error fetching user profile: $e");
   }
 }
-
-
-  }

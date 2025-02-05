@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:safe_drive/database/tripdata.dart';
 import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
 import 'package:safe_drive/ui_screens/drivetrip/driving.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart'
@@ -24,7 +23,10 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     const Homecontent(),
-    const DriveTrip(),
+    const TripDetails(
+      tripId: "",
+      uniqueId: '',
+    ),
     const safedrive_settings.Settings(),
   ];
 
@@ -55,7 +57,7 @@ class _HomepageState extends State<Homepage> {
           ),
           GButton(
             icon: Icons.drive_eta,
-            text: 'Drive Trip',
+            text: 'Trip History',
             textStyle: TextStyle(
                 fontFamily: 'Montserrat',
                 fontWeight: FontWeight.normal,
@@ -261,8 +263,8 @@ class _HomecontentState extends State<Homecontent> {
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {
-                            TripData tripData = TripData();
-                            tripData.simulateStopTrip();
+                            // TripData tripData = TripData();
+                            // tripData.simulateStopTrip();
                           },
                           child: Text(
                             "Simulate Trip",

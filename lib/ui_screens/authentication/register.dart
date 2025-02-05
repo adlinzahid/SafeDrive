@@ -145,7 +145,6 @@ class _Registerpage extends State<Registerpage> {
               'username': username,
               'email': email,
               'userId': uniqueId,
-              'authId': user.uid, // Store Firebase Auth UID
               'createdAt': FieldValue.serverTimestamp(),
             });
           });
