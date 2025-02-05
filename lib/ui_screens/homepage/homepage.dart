@@ -4,12 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
+// import 'package:safe_drive/ui_screens/drivetrip/drivesummary.dart';
 import 'package:safe_drive/ui_screens/drivetrip/driving.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart'
     as safedrive_settings;
 // import 'package:geolocator/geolocator.dart';
 
 import 'package:safe_drive/services/drivingtracker.dart';
+import 'package:safe_drive/ui_screens/drivetrip/latesttrip.dart'; // Import the latesttrip.dart file
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -22,7 +24,7 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     const Homecontent(),
-    const TripDetails(),
+    const DriveTrip(),
     const safedrive_settings.Settings(),
   ];
 
@@ -102,6 +104,20 @@ class _HomecontentState extends State<Homecontent> {
   void initState() {
     super.initState();
     currentUser = _auth.currentUser;
+    _loadLatestTripData();
+  }
+
+  void _loadLatestTripData() {
+    // Assuming LatestTrip is a class in latesttrip.dart that provides the latest trip data
+    Latesttrip().fetchLatestTrip().then((latestTripSnapshot) {
+      final latestTripData = latestTripSnapshot.data() as Map<String, dynamic>;
+      setState(() {
+        totalDistance = latestTripData['totalDistance'];
+        hardBrakes = latestTripData['hardBrakes'];
+        sharpTurns = latestTripData['sharpTurns'];
+        avgSpeed = latestTripData['avgSpeed'];
+      });
+    });
   }
 
   @override
@@ -135,16 +151,12 @@ class _HomecontentState extends State<Homecontent> {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 10),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
-
               // Recent Trip Details Box (Individual Boxes)
               Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(25.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20.0),
                   child: Container(
@@ -152,6 +164,7 @@ class _HomecontentState extends State<Homecontent> {
                     color: Colors.deepPurple[200],
                     child: Column(
                       children: [
+                        const SizedBox(height: 15),
                         const Text(
                           "Latest Trip Summary",
                           style: TextStyle(
