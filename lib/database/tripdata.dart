@@ -1,4 +1,6 @@
 //user will stop the trip by clicking on the stop button and the trip data will be saved to firestore and deleted from real time database
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,89 +8,153 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
 
 class TripData {
-  final DatabaseReference _db = FirebaseDatabase.instanceFor(
-    app: Firebase.app(),
-    databaseURL:
-        "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  )
-      .ref()
-      .child("Users")
-      .child(FirebaseAuth.instance.currentUser!.uid)
-      .child("ActiveTrip");
+  Future<void> stopTrip() async {
+    final user = FirebaseAuth.instance.currentUser;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    if (user == null) {
+      log('User is not authenticated');
+      return;
+    }
 
-  void stopTrip() async {
-    DataSnapshot snapshot = await _db.get();
-    if (!snapshot.exists) return;
+    DatabaseReference tripRef = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL:
+          "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    ).ref().child("Users").child(user.uid).child("ActiveTrip");
 
-    Map<dynamic, dynamic>? tripData = snapshot.value as Map?;
-    if (tripData == null) return;
+    try {
+      log('Stopping trip...');
+      DatabaseEvent event = await tripRef.once();
+      DataSnapshot snapshot = event.snapshot;
 
-    // Generate a unique trip ID using the uuid package. E.g: DT-0001
-    String tripId = "DT-${Uuid().v4().substring(0, 4)}";
+      if (snapshot.exists) {
+        Map<String, dynamic>? tripData =
+            Map<String, dynamic>.from(snapshot.value as Map);
 
-    // Save to Firestore
-    await _firestore
-        .collection("Users")
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection("DriveTrips")
-        .doc(tripId)
-        .set({
-      "startTime": tripData["startTime"],
-      "endTime": DateTime.now().toIso8601String(),
-      "hardBrakes": tripData["hardBrakes"],
-      "sharpTurns": tripData["sharpTurns"],
-      "suddenAcceleration": tripData["suddenAcceleration"],
-      "route": tripData["route"],
-      "feedbackMessage": generateFeedback(tripData),
-      "tripId": tripId,
-    });
+        tripData["endTime"] = DateTime.now().toIso8601String();
+        tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
 
-    // Delete active trip from Realtime Database
-    await _db.remove();
+        //Generate a unique ID for the trip data. Eg. DT-0000
+        var uuid = const Uuid();
+        String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
+
+        await FirebaseFirestore.instance
+            .collection("Users")
+            .doc(user.uid)
+            .collection("DriveTrips")
+            .doc(tripId)
+            .set(tripData);
+
+        await tripRef.remove(); // Clear active trip data
+        log("Trip data moved to Firestore and deleted from Realtime Database.");
+      } else {
+        log("No active trip data found.");
+      }
+    } catch (e) {
+      log("Error stopping trip: $e");
+    }
   }
 
-  String generateFeedback(Map<dynamic, dynamic> tripData) {
+  String generateFeedbackMessage(Map<String, dynamic> tripData) {
     int hardBrakes = tripData["hardBrakes"] ?? 0;
     int sharpTurns = tripData["sharpTurns"] ?? 0;
     int suddenAcceleration = tripData["suddenAcceleration"] ?? 0;
 
-    if (hardBrakes > 3 || sharpTurns > 3 || suddenAcceleration > 3) {
-      return "You had multiple hard brakes and sharp turns. Drive cautiously!";
+    List<String> feedback = [];
+
+    if (hardBrakes > 0) {
+      feedback.add("Hard brakes: $hardBrakes times. Maintain safe distance.");
     }
-    return "Good job! Your driving was smooth and safe.";
+    if (sharpTurns > 0) {
+      feedback.add("Sharp turns: $sharpTurns times. Slow down on curves.");
+    }
+    if (suddenAcceleration > 0) {
+      feedback.add(
+          "Sudden acceleration: $suddenAcceleration times. Drive smoothly.");
+    }
+
+    return feedback.isEmpty
+        ? "Great driving!"
+        : "During your past drive:\n- ${feedback.join("\n- ")}";
+  }
+//simulate data to check the functionality
+
+  void simulateTripData() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      log('User is not authenticated');
+      return;
+    }
+
+    DatabaseReference tripRef = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL:
+          "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    ).ref().child("Users").child(user.uid).child("ActiveTrip");
+
+    try {
+      log('Simulating trip data...');
+      await tripRef.set({
+        "startTime": DateTime.now().toIso8601String(),
+        "hardBrakes": 2,
+        "sharpTurns": 2,
+        "suddenAcceleration": 1,
+        "speed": 0.0,
+        "route": [],
+        "paused": false,
+        "endTime": null,
+      });
+      log('Trip data simulated successfully.');
+
+      //now save the trip data to firestore, use if else statement to check if the trip data is saved to firestore
+      DatabaseEvent event = await tripRef.once();
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot != null) {
+        Map<String, dynamic>? tripData =
+            Map<String, dynamic>.from(snapshot.value as Map);
+
+        tripData["endTime"] = DateTime.now().toIso8601String();
+        tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
+
+        //Generate a unique ID for the trip data. Eg. DT-0000
+        var uuid = const Uuid();
+        String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
+
+        await FirebaseFirestore.instance
+            .collection("Users")
+            .doc(user.uid)
+            .collection("DriveTrips")
+            .doc(tripId)
+            .set(tripData);
+
+        await tripRef.remove(); // Clear active trip data
+        log("Trip data moved to Firestore and deleted from Realtime Database.");
+      } else {
+        log("No active trip data found.");
+      }
+    } catch (e) {
+      log('Error simulating trip data: $e');
+    }
   }
 
-  //test function to check if the trip data is saved to firestore
-  // Test function to simulate stopping a trip
-  void simulateStopTrip() async {
-    // Simulate trip data
-    FirebaseAuth auth = FirebaseAuth.instance;
-    User? user = auth.currentUser;
+//method to fetch the trip data from firestore
+  Future<DocumentSnapshot> fetchTripData(tripId) async {
+    final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      // The user is authenticated, proceed with the write request
-    } else {
-      return null;
+    if (user == null) {
+      log('User is not authenticated');
+      return Future.error('User is not authenticated');
     }
 
-    Map<String, dynamic> simulatedTripData = {
-      "startTime":
-          DateTime.now().subtract(Duration(hours: 1)).toIso8601String(),
-      "hardBrakes": 4,
-      "sharpTurns": 0,
-      "suddenAcceleration": 3,
-      "route": [
-        {"lat": 37.7749, "lng": -122.4194},
-        {"lat": 34.0522, "lng": -118.2437},
-      ],
-    };
+    //get the collection of the user's trip data for the current user
+    final tripData = await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(user.uid)
+        .collection('DriveTrips')
+        .doc(tripId)
+        .get();
 
-    // Set simulated data in the real-time database
-    await _db.set(simulatedTripData);
-
-    // Call stopTrip to save the data to Firestore and remove it from the real-time database
-    stopTrip();
+    return tripData;
   }
 }
