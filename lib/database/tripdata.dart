@@ -1,6 +1,4 @@
-//user will stop the trip by clicking on the stop button and the trip data will be saved to firestore and deleted from real time database
 import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,57 +10,59 @@ class TripData {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      log('User is not authenticated');
+      log("Error: No authenticated user found.");
       return;
     }
+
+    String userId = user.uid;
+    log("Stopping trip for user ID: $userId");
 
     DatabaseReference tripRef = FirebaseDatabase.instanceFor(
       app: Firebase.app(),
       databaseURL:
           "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    ).ref().child("Users").child(user.uid).child("ActiveTrip");
+    ).ref().child("Users").child(userId).child("ActiveTrip");
 
     try {
-      log('Stopping trip...');
+      log('Fetching active trip data...');
       DatabaseEvent event = await tripRef.once();
       DataSnapshot snapshot = event.snapshot;
 
-      if (snapshot.exists) {
-        Map<String, dynamic>? tripData =
-            Map<String, dynamic>.from(snapshot.value as Map);
-
-        tripData["endTime"] = DateTime.now().toIso8601String();
-        tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
-
-        //Generate a unique ID for the trip data. Eg. DT-0000
-        var uuid = const Uuid();
-        String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
-
-        final userDoc = await FirebaseFirestore.instance
-            .collection("Users")
-            .where("Fire_uid", isEqualTo: user.uid)
-            .limit(1)
-            .get();
-
-        if (userDoc.docs.isNotEmpty) {
-          await userDoc.docs.first.reference
-              .collection("DriveTrips")
-              .doc(tripId)
-              .set(tripData)
-              .then((_) {
-            log("Trip data moved to Firestore.");
-            log("Saving trip data to Firestore path: Users/${user.uid}/DriveTrips/$tripId");
-          });
-        } else {
-          log("User document not found.");
-        }
-
-        await tripRef.remove(); // Clear active trip data
-      } else {
+      if (!snapshot.exists) {
         log("No active trip data found.");
+        return;
       }
+
+      Map<String, dynamic> tripData =
+          Map<String, dynamic>.from(snapshot.value as Map);
+
+      tripData["endTime"] = DateTime.now().toIso8601String();
+      tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
+
+      // Generate a unique trip ID
+      String tripId = 'DT-${Uuid().v4().substring(0, 4).toUpperCase()}';
+
+      //Query Firestore to find the correct user document and save the trip data
+      QuerySnapshot userDoc = await FirebaseFirestore.instance
+          .collection("Users")
+          .where("uid", isEqualTo: user.uid)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        DocumentReference userRef = userDoc.docs.first.reference;
+
+        // Save trip data inside the correct user document
+        await userRef.collection("DriveTrips").doc(tripId).set(tripData);
+        log("Trip data saved successfully in Firestore for ${user.uid} with email ${user.email}.");
+      } else {
+        log("Error: No user document found for Firebase UID: ${user.uid}");
+        return;
+      }
+
+      await tripRef.remove(); // Remove from Realtime Database
+      log("Trip data removed from Realtime Database.");
     } catch (e) {
-      log("Error saving data to firestore: $e");
+      log("Error while stopping trip: $e");
     }
   }
 
@@ -88,21 +88,21 @@ class TripData {
         ? "Great driving!"
         : "During your past drive:\n- ${feedback.join("\n- ")}";
   }
-//simulate data to check the functionality
 
   void simulateTripData() async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      log('User is not authenticated');
+      log('Error: User is not authenticated');
       return;
     }
 
+    String userId = user.uid;
     DatabaseReference tripRef = FirebaseDatabase.instanceFor(
       app: Firebase.app(),
       databaseURL:
           "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    ).ref().child("Users").child(user.uid).child("ActiveTrip");
+    ).ref().child("Users").child(userId).child("ActiveTrip");
 
     try {
       log('Simulating trip data...');
@@ -118,49 +118,58 @@ class TripData {
       });
       log('Trip data simulated successfully.');
 
-      //now save the trip data to firestore, use if else statement to check if the trip data is saved to firestore
       DatabaseEvent event = await tripRef.once();
       DataSnapshot snapshot = event.snapshot;
-      Map<String, dynamic>? tripData =
+
+      if (!snapshot.exists) {
+        log("Simulation failed: No trip data found.");
+        return;
+      }
+
+      Map<String, dynamic> tripData =
           Map<String, dynamic>.from(snapshot.value as Map);
 
       tripData["endTime"] = DateTime.now().toIso8601String();
       tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
 
-      //Generate a unique ID for the trip data. Eg. DT-0000
-      var uuid = const Uuid();
-      String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
+      // Generate a unique trip ID
+      String tripId = 'DT-${Uuid().v4().substring(0, 4).toUpperCase()}';
 
-      await FirebaseFirestore.instance
+      // Save trip data to Firestore
+      DocumentReference tripDocRef = FirebaseFirestore.instance
           .collection("Users")
-          .doc(user.uid)
+          .doc(userId)
           .collection("DriveTrips")
-          .doc(tripId)
-          .set(tripData);
+          .doc(tripId);
 
-      await tripRef.remove(); // Clear active trip data
-      log("Trip data moved to Firestore and deleted from Realtime Database.");
-        } catch (e) {
+      await tripDocRef.set(tripData);
+      log("Simulated trip data saved to Firestore.");
+
+      await tripRef.remove();
+      log("Simulated trip data removed from Realtime Database.");
+    } catch (e) {
       log('Error simulating trip data: $e');
     }
   }
 
-//method to fetch the trip data from firestore
-  Future<DocumentSnapshot> fetchTripData(tripId) async {
+  Future<DocumentSnapshot> fetchTripData(String tripId) async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      log('User is not authenticated');
+      log('Error: User is not authenticated');
       return Future.error('User is not authenticated');
     }
 
-    //get the collection of the user's trip data for the current user
-    final tripData = await FirebaseFirestore.instance
+    DocumentSnapshot tripData = await FirebaseFirestore.instance
         .collection('Users')
         .doc(user.uid)
         .collection('DriveTrips')
         .doc(tripId)
         .get();
+
+    if (!tripData.exists) {
+      log("Error: Trip data for ID $tripId not found.");
+    }
 
     return tripData;
   }

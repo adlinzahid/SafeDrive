@@ -90,31 +90,22 @@ class Homecontent extends StatefulWidget {
 
 class _HomecontentState extends State<Homecontent> {
   bool isTripActive = false;
-  // Position? _lastPosition;
   double totalDistance = 0.0;
   int hardBrakes = 0;
   int sharpTurns = 0;
-  // Timer? _tripTimer;
   DateTime? startTime;
   DateTime? endTime;
   double avgSpeed = 0.0;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   User? currentUser;
 
   final DrivingTracker drivingTracker = DrivingTracker();
-
-  //String vehiclePlate = "vba 585"; // Define the vehicle plate
 
   @override
   void initState() {
     super.initState();
     currentUser = _auth.currentUser;
-    //Initialise the text controllers with the user data
-    if (currentUser?.displayName != null) {
-      currentUser!.displayName!;
-    }
   }
 
   @override
@@ -125,13 +116,11 @@ class _HomecontentState extends State<Homecontent> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Profile Section
               Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                 color: Colors.deepPurple,
                 child: Column(
-                  //crossAxisAlignment: CrossAxisAlignment.baseline,
                   children: [
                     Center(
                       child: Image.asset(
@@ -142,7 +131,7 @@ class _HomecontentState extends State<Homecontent> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Hi, ${currentUser!.displayName!}!",
+                      "Hi, ${currentUser?.displayName}!",
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 20,
@@ -150,135 +139,64 @@ class _HomecontentState extends State<Homecontent> {
                         color: Colors.white,
                       ),
                     ),
-
-                    /*Text(
-                            "Vehicle: $vehiclePlate",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),*/
-
-                    // Edit Button
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.deepPurple),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const UserProfile(),
-                          ),
-                        );
-                      },
-                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
-              // Start Trip Section
+
+              const SizedBox(height: 20),
+
+              // Recent Trip Details Box (Individual Boxes)
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20.0),
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.8,
-                    height: 400,
                     color: Colors.deepPurple[200],
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        /*Text(
-                          "Hi, ${currentUser!.displayName!}!",
-                          style: const TextStyle(
+                        const Text(
+                          "Latest Trip Summary",
+                          style: TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
-                        ),*/
-                        if (endTime != null) ...[
-                          const Text(
-                            "Trip Summary",
-                            style: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Start: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime!)}",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            "End: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime!)}",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Distance: ${totalDistance.toStringAsFixed(2)} km",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            "Avg Speed: ${avgSpeed.toStringAsFixed(1)} km/h",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Center(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: Text(
-                                //feedbackmessage function here
-                                "Feedback: Good driving!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.yellowAccent[700],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Display trip info
+                        _buildStatBox(
+                            'Distance',
+                            '${totalDistance.toStringAsFixed(2)} km',
+                            Icons.directions_car),
+                        _buildStatBox('Speed',
+                            '${avgSpeed.toStringAsFixed(1)} km/h', Icons.speed),
+                        _buildStatBox(
+                            'Sharp Turns', '$sharpTurns', Icons.turn_right),
+                        _buildStatBox(
+                            'Hard Brakes', '$hardBrakes', Icons.car_crash),
+
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TripData tripData = TripData();
-                            // tripData.simulateStopTrip();
-                          },
-                          child: Text(
-                            "Simulate Trip",
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+
+                        Text(
+                          "Feedback: Good driving!",
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.deepPurple,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
+
                         ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellowAccent[700],
+                          ),
                           onPressed: () {
-                            //call driving.dart file
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -290,7 +208,7 @@ class _HomecontentState extends State<Homecontent> {
                             "Start Trip",
                             style: const TextStyle(
                               fontFamily: 'Montserrat',
-                              fontSize: 20,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -307,14 +225,61 @@ class _HomecontentState extends State<Homecontent> {
     );
   }
 
-  /*Widget _buildStatBox(String title, String value) {
-    return Column(
-      children: [
-        Text(title, style: TextStyle(fontSize: 14, color: Colors.grey)),
-        SizedBox(height: 5),
-        Text(value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      ],
+  // Helper widget to build individual stat boxes
+  Widget _buildStatBox(String title, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15.0),
+          boxShadow: [
+            BoxShadow(
+              // ignore: deprecated_member_use
+              color: Colors.grey.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.deepPurple,
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 16,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-  }*/
+  }
 }
