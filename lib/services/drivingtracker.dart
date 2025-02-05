@@ -10,6 +10,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 class DrivingTracker {
   DatabaseReference? _realtime;
+  Position? _previousPosition;
+  double _totalDistance = 0.0; // Total distance travelled
 
 //Initialize the trip data and start tracking the user's location and speed
 
@@ -48,6 +50,7 @@ class DrivingTracker {
         "sharpTurns": 0,
         "suddenAcceleration": 0,
         "speed": 0.0,
+        "distance": 0.0, // Initialize distance
         "route": [],
         "paused": false,
         "endTime": null,
@@ -58,10 +61,29 @@ class DrivingTracker {
         locationSettings: LocationSettings(
             accuracy: LocationAccuracy.high, distanceFilter: 10),
       ).listen((Position position) {
-        double speed = position.speed;
-        _realtime!.child("speed").set(speed);
+        double speed = position.speed * 3.6; // Convert from m/s to km/h
 
-        if (speed > 22.22) {
+        // Track distance
+        if (_previousPosition != null) {
+          double distance = Geolocator.distanceBetween(
+            _previousPosition!.latitude,
+            _previousPosition!.longitude,
+            position.latitude,
+            position.longitude,
+          );
+          _totalDistance += distance;
+        }
+
+        _previousPosition = position;
+
+        // Save speed and distance to Realtime Database
+        _realtime!.update({
+          "speed": speed,
+          "distance": _totalDistance / 1000, // Convert meters to KM
+        });
+
+        if (speed > 80) {
+          // Speed warning at 80 km/h
           showSpeedAlert();
         }
       });

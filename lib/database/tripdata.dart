@@ -38,20 +38,31 @@ class TripData {
         var uuid = const Uuid();
         String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
 
-        await FirebaseFirestore.instance
+        final userDoc = await FirebaseFirestore.instance
             .collection("Users")
-            .doc(user.uid)
-            .collection("DriveTrips")
-            .doc(tripId)
-            .set(tripData);
+            .where("Fire_uid", isEqualTo: user.uid)
+            .limit(1)
+            .get();
+
+        if (userDoc.docs.isNotEmpty) {
+          await userDoc.docs.first.reference
+              .collection("DriveTrips")
+              .doc(tripId)
+              .set(tripData)
+              .then((_) {
+            log("Trip data moved to Firestore.");
+            log("Saving trip data to Firestore path: Users/${user.uid}/DriveTrips/$tripId");
+          });
+        } else {
+          log("User document not found.");
+        }
 
         await tripRef.remove(); // Clear active trip data
-        log("Trip data moved to Firestore and deleted from Realtime Database.");
       } else {
         log("No active trip data found.");
       }
     } catch (e) {
-      log("Error stopping trip: $e");
+      log("Error saving data to firestore: $e");
     }
   }
 
@@ -110,30 +121,26 @@ class TripData {
       //now save the trip data to firestore, use if else statement to check if the trip data is saved to firestore
       DatabaseEvent event = await tripRef.once();
       DataSnapshot snapshot = event.snapshot;
-      if (snapshot != null) {
-        Map<String, dynamic>? tripData =
-            Map<String, dynamic>.from(snapshot.value as Map);
+      Map<String, dynamic>? tripData =
+          Map<String, dynamic>.from(snapshot.value as Map);
 
-        tripData["endTime"] = DateTime.now().toIso8601String();
-        tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
+      tripData["endTime"] = DateTime.now().toIso8601String();
+      tripData["feedbackMessage"] = generateFeedbackMessage(tripData);
 
-        //Generate a unique ID for the trip data. Eg. DT-0000
-        var uuid = const Uuid();
-        String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
+      //Generate a unique ID for the trip data. Eg. DT-0000
+      var uuid = const Uuid();
+      String tripId = 'DT-${uuid.v4().substring(0, 4).toUpperCase()}';
 
-        await FirebaseFirestore.instance
-            .collection("Users")
-            .doc(user.uid)
-            .collection("DriveTrips")
-            .doc(tripId)
-            .set(tripData);
+      await FirebaseFirestore.instance
+          .collection("Users")
+          .doc(user.uid)
+          .collection("DriveTrips")
+          .doc(tripId)
+          .set(tripData);
 
-        await tripRef.remove(); // Clear active trip data
-        log("Trip data moved to Firestore and deleted from Realtime Database.");
-      } else {
-        log("No active trip data found.");
-      }
-    } catch (e) {
+      await tripRef.remove(); // Clear active trip data
+      log("Trip data moved to Firestore and deleted from Realtime Database.");
+        } catch (e) {
       log('Error simulating trip data: $e');
     }
   }
