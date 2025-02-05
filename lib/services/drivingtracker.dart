@@ -54,6 +54,7 @@ class DrivingTracker {
         "route": [],
         "paused": false,
         "endTime": null,
+        "driver": user.uid,
       });
 
       log('Tracking location & speed...');
