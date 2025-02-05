@@ -22,7 +22,7 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     const Homecontent(),
-    const TripDetails(),
+    const DriveTrip(),
     const safedrive_settings.Settings(),
   ];
 

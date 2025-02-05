@@ -1,5 +1,3 @@
-// Displaying the trip history of the user
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +14,6 @@ class DriveTrip extends StatefulWidget {
 
 class _DriveTripState extends State<DriveTrip> {
   final user = FirebaseAuth.instance.currentUser;
-  String? uniqueId;
 
   @override
   void initState() {
@@ -38,88 +35,89 @@ class _DriveTripState extends State<DriveTrip> {
         ),
         backgroundColor: Colors.deepPurple,
       ),
-      body: uniqueId == null
-          ? const Center(
-              child:
-                  CircularProgressIndicator()) // Show loading until uniqueId is available
-          : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection("Users")
-                  .doc(user?.uid)
-                  .collection("DriveTrips")
-                  .orderBy("startTime", descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "No trip history available",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontFamily: 'Montserrat',
-                      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection("Users")
+            .doc(user?.uid)
+            .collection("DriveTrips")
+            .orderBy("startTime", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text(
+                "No trip history available",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+            );
+          }
+
+          var trips = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: trips.length,
+            itemBuilder: (context, index) {
+              var trip = trips[index];
+              DateTime startTime = DateTime.parse(trip["startTime"]);
+              String formattedDate =
+                  DateFormat('yyyy-MM-dd HH:mm').format(startTime);
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TripDetails(tripId: trip.id),
                     ),
                   );
-                }
-
-                var trips = snapshot.data!.docs;
-
-                return ListView.builder(
-                  itemCount: trips.length,
-                  itemBuilder: (context, index) {
-                    var trip = trips[index];
-                    DateTime startTime = DateTime.parse(trip["startTime"]);
-                    String formattedDate =
-                        DateFormat('yyyy-MM-dd HH:mm').format(startTime);
-
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TripDetails(),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        color: Colors.deepPurple[200],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 3,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.directions_car,
-                                color: Colors.deepPurple),
-                          ),
-                          title: Text(
-                            "Trip on $formattedDate",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
-                            ),
-                          ),
-                          trailing: Icon(Icons.arrow_forward_ios,
-                              size: 18, color: Colors.yellowAccent[700]),
-                        ),
+                },
+                child: Card(
+                  color: Colors.deepPurple[200],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  elevation: 3,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child:
+                          Icon(Icons.directions_car, color: Colors.deepPurple),
+                    ),
+                    title: Text(
+                      "Trip on $formattedDate",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                    trailing: Icon(Icons.arrow_forward_ios,
+                        size: 18, color: Colors.yellowAccent[700]),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
 
 class TripDetails extends StatelessWidget {
-  const TripDetails({super.key});
+  final String tripId;
+
+  const TripDetails({super.key, required this.tripId});
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +167,7 @@ class TripDetails extends StatelessWidget {
           DocumentReference userDoc = userSnapshot.data!.docs.first.reference;
 
           return FutureBuilder<DocumentSnapshot>(
-            future: userDoc.collection("DriveTrips").doc().get(),
+            future: userDoc.collection("DriveTrips").doc(tripId).get(),
             builder: (context, tripSnapshot) {
               if (tripSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -208,7 +206,8 @@ class TripDetails extends StatelessWidget {
                   Expanded(
                     child: FlutterMap(
                       options: MapOptions(
-                        initialCenter: route.first,
+                        initialCenter:
+                            route.isNotEmpty ? route.first : LatLng(0, 0),
                         minZoom: 15.0,
                         maxZoom: 18.0,
                       ),
@@ -225,20 +224,22 @@ class TripDetails extends StatelessWidget {
                           )
                         ]),
                         MarkerLayer(markers: [
-                          Marker(
-                            width: 80.0,
-                            height: 80.0,
-                            point: route.first,
-                            child: const Icon(Icons.circle,
-                                color: Colors.green, size: 40.0),
-                          ),
-                          Marker(
-                            width: 80.0,
-                            height: 80.0,
-                            point: route.last,
-                            child: const Icon(Icons.circle,
-                                color: Colors.red, size: 40.0),
-                          ),
+                          if (route.isNotEmpty)
+                            Marker(
+                              width: 80.0,
+                              height: 80.0,
+                              point: route.first,
+                              child: const Icon(Icons.circle,
+                                  color: Colors.green, size: 40.0),
+                            ),
+                          if (route.isNotEmpty)
+                            Marker(
+                              width: 80.0,
+                              height: 80.0,
+                              point: route.last,
+                              child: const Icon(Icons.circle,
+                                  color: Colors.red, size: 40.0),
+                            ),
                         ]),
                       ],
                     ),
