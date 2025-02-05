@@ -4,70 +4,107 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:fluttertoast/fluttertoast.dart'; //fluttertoast will be used to show alerts to the user
+import 'package:fluttertoast/fluttertoast.dart';
 
 class DrivingTracker {
-  final DatabaseReference _db = FirebaseDatabase.instanceFor(
-    app: Firebase.app(),
-    databaseURL:
-        "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  )
-      .ref()
-      .child("Users")
-      .child(FirebaseAuth.instance.currentUser!.uid)
-      .child("ActiveTrip");
+  DatabaseReference? _realtime;
 
-  void startTrip() {
-    // Initialize trip data
-    log('Starting trip...');
-    _db.set({
-      "startTime": DateTime.now().toIso8601String(),
-      "hardBrakes": 0,
-      "sharpTurns": 0,
-      "suddenAcceleration": 0,
-      "speed": 0.0,
-      "route": [],
-    });
+//Initialize the trip data and start tracking the user's location and speed
 
-    // Track location & speed
-    log('Tracking location & speed...');
-    Geolocator.getPositionStream(
-            locationSettings: LocationSettings(
-                accuracy: LocationAccuracy.high, distanceFilter: 10))
-        .listen((Position position) {
-      double speed = position.speed;
-      _db.child("speed").set(speed);
-
-      // 🚨 Trigger alert if speed is too high (e.g., 80 km/h)
-      if (speed > 22.22) {
-        // 22.22 m/s = 80 km/h
-        showSpeedAlert();
-      }
-    });
+  Future<void> initializeTracker() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      log("Initializing tracker for user ID: ${user.uid}");
+      _realtime = FirebaseDatabase.instanceFor(
+        app: Firebase.app(),
+        databaseURL:
+            "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      ).ref().child("Users").child(user.uid).child("ActiveTrip");
+    } else {
+      log("Failed to initialize tracker: User ID $user not found");
+    }
   }
 
-  //pause the trip when user clicks on the pause button
+  Future<void> startTrip() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      log("User not authenticated");
+      return;
+    }
+
+    await initializeTracker();
+    if (_realtime == null) {
+      log("Database reference not initialized.");
+      return;
+    }
+
+    try {
+      log('Starting trip...');
+      await _realtime!.set({
+        "startTime": DateTime.now().toIso8601String(),
+        "hardBrakes": 0,
+        "sharpTurns": 0,
+        "suddenAcceleration": 0,
+        "speed": 0.0,
+        "route": [],
+        "paused": false,
+        "endTime": null,
+      });
+
+      log('Tracking location & speed...');
+      Geolocator.getPositionStream(
+        locationSettings: LocationSettings(
+            accuracy: LocationAccuracy.high, distanceFilter: 10),
+      ).listen((Position position) {
+        double speed = position.speed;
+        _realtime!.child("speed").set(speed);
+
+        if (speed > 22.22) {
+          showSpeedAlert();
+        }
+      });
+    } catch (e) {
+      log('Error starting trip: $e');
+    }
+  }
+
   void pauseTrip() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      log("User not authenticated");
+      return;
+    }
+
     log('Pausing trip...');
-    _db.child("paused").set(true);
+    _realtime?.child("paused").set(true);
   }
 
-  //resume the trip when user clicks on the resume button
   void resumeTrip() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      log("User not authenticated");
+      return;
+    }
+
     log('Resuming trip...');
-    _db.child("paused").remove();
+    _realtime?.child("paused").set(false);
   }
 
-  // Alert Function
   void showSpeedAlert() {
-    log('message: Speed alert triggered');
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      log("User not authenticated");
+      return;
+    }
     Fluttertoast.showToast(
-      msg: "⚠️ Slow down! You're driving too fast!",
-      toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.TOP,
-    );
+        msg: "You are driving above the speed limit!",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 5,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0);
   }
-
-  //stop the trip method is in the tripdata.dart file
 }
