@@ -1,8 +1,12 @@
 //this is the driving screen ui to display the driving screen
 //this screen will be displayed when the user starts the trip
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:safe_drive/services/drivingtracker.dart';
 import 'package:safe_drive/database/tripdata.dart';
+import 'dart:async';
 
 class DrivingScreen extends StatefulWidget {
   const DrivingScreen({super.key});
@@ -19,11 +23,47 @@ class _DrivingScreenState extends State<DrivingScreen> {
   double distance = 0.0;
   int elapsedTime = 0; // Time in seconds
   bool isPaused = false;
+  Timer? _timer;
+  DatabaseReference? _realtime;
 
   @override
   void initState() {
     super.initState();
     drivingTracker.startTrip(); // Start tracking trip
+    startTimer();
+    listenToTripData();
+  }
+
+  void startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      if (!isPaused) {
+        setState(() {
+          elapsedTime++;
+        });
+      }
+    });
+  }
+
+  void listenToTripData() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _realtime = FirebaseDatabase.instanceFor(
+        app: Firebase.app(),
+        databaseURL:
+            "https://safedrive-f52ba-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      ).ref().child("Users").child(user.uid).child("ActiveTrip");
+
+      _realtime!.onValue.listen((event) {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+        if (data != null) {
+          setState(() {
+            speed = (data["speed"] ?? 0.0).toDouble();
+            distance = (data["distance"] ?? 0.0).toDouble();
+          });
+        }
+      });
+    }
   }
 
   @override

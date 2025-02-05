@@ -1,12 +1,12 @@
 import 'dart:developer';
 //import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safe_drive/authentication/auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_drive/services/profile_image_service.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -16,10 +16,8 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final AuthActivity _authActivity = AuthActivity();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? currentUserPhoto; // Store base64 profile image
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -27,10 +25,14 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _vehicleController = TextEditingController();
   final TextEditingController _vehicleNumberController =
       TextEditingController();
+<<<<<<< HEAD
   //final TextEditingController _addressController = TextEditingController();
+=======
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
 
   bool isEditing = false;
   User? currentUser;
+  String? currentUserPhoto; // Store base64 profile image
 
   @override
   void initState() {
@@ -44,13 +46,8 @@ class _UserProfileState extends State<UserProfile> {
       return;
     }
 
-    // Initialize text controllers with current user data
-    if (currentUser?.displayName != null) {
-      _nameController.text = currentUser!.displayName!;
-    }
-    if (currentUser?.email != null) {
-      _emailController.text = currentUser!.email!;
-    }
+    // Load user data from Firestore
+    fetchUserProfile();
   }
 
   Future<void> _updateUserData() async {
@@ -62,6 +59,10 @@ class _UserProfileState extends State<UserProfile> {
     try {
       log("Updating user profile for UID: ${currentUser!.uid}");
 
+<<<<<<< HEAD
+=======
+//update user data in firestore
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
       await _firestore.collection('Users').doc(currentUser!.uid).update({
         'username': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -71,6 +72,12 @@ class _UserProfileState extends State<UserProfile> {
 
       log("User profile updated successfully!");
 
+<<<<<<< HEAD
+=======
+// Fetch updated data from Firestore and update UI
+      await fetchUserProfile();
+
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
       setState(() {
         isEditing = false;
       });
@@ -129,15 +136,16 @@ class _UserProfileState extends State<UserProfile> {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey[300],
-                      backgroundImage: currentUserPhoto != null
+                      backgroundImage: currentUserPhoto != null &&
+                              currentUserPhoto!.isNotEmpty
                           ? MemoryImage(base64Decode(
-                              currentUserPhoto!)) // Show base64 image
+                              currentUserPhoto!)) // Correct base64 image
                           : const AssetImage('assets/images/profile_pic.png')
                               as ImageProvider,
                       child: currentUserPhoto == null
                           ? const Icon(Icons.camera_alt,
                               color: Colors.white, size: 30)
-                          : null, // Hide icon if image exists
+                          : null,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -155,7 +163,9 @@ class _UserProfileState extends State<UserProfile> {
                     icon: Icon(isEditing ? Icons.save : Icons.edit,
                         color: Colors.white),
                     onPressed: () async {
-                      if (isEditing) {}
+                      if (isEditing) {
+                        await _updateUserData();
+                      }
                       setState(() {
                         isEditing = !isEditing;
                       });
@@ -276,6 +286,7 @@ class _UserProfileState extends State<UserProfile> {
     File imageFile = File(pickedFile.path);
     List<int> imageBytes = await imageFile.readAsBytes();
     String base64Image =
+<<<<<<< HEAD
         base64Encode(imageFile.readAsBytesSync()); // Convert to base64
 
     try {
@@ -288,12 +299,38 @@ class _UserProfileState extends State<UserProfile> {
       });
 
       _showSnackbar('Profile picture updated');
+=======
+        base64Encode(imageBytes); // Convert to base64 correctly
+
+    try {
+      // Fetch correct user document using email
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        String userId = userQuery.docs.first.id; // Get correct document ID
+
+        // Update Firestore with base64 image
+        await _firestore.collection('Users').doc(userId).update({
+          'profilePicture': base64Image,
+        });
+
+        setState(() {
+          currentUserPhoto = base64Image;
+        });
+
+        _showSnackbar('Profile picture updated');
+      }
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
     } catch (e) {
       log('Error uploading image: $e');
       _showErrorSnackbar('Failed to update profile picture');
     }
   }
 
+<<<<<<< HEAD
   Future<void> updateUserProfile(
       String userId, String name, String phone, String vehicleNumber) async {
     try {
@@ -305,6 +342,58 @@ class _UserProfileState extends State<UserProfile> {
       print("User profile updated successfully!");
     } catch (e) {
       print("Error updating profile: $e");
+=======
+//update user profile
+  Future<void> updateUserProfile(
+      String name, String phone, String vehicleNumber) async {
+    try {
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        String userId = userQuery.docs.first.id; // Fetch correct ID
+
+        await _firestore.collection('Users').doc(userId).update({
+          'username': name,
+          'phone': phone,
+          'vehicleNumber': vehicleNumber,
+        });
+
+        _showSnackbar("User profile updated successfully!");
+      }
+    } catch (e) {
+      log("Error updating profile: $e");
+      _showErrorSnackbar("Failed to update profile.");
+    }
+  }
+
+//fetchUserprofile
+  Future<void> fetchUserProfile() async {
+    if (currentUser == null) return;
+
+    try {
+      // Fetch the user's document based on their email
+      QuerySnapshot userQuery = await _firestore
+          .collection('Users')
+          .where('email', isEqualTo: currentUser!.email)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        DocumentSnapshot userDoc = userQuery.docs.first;
+
+        setState(() {
+          _nameController.text = userDoc['username'] ?? '';
+          _emailController.text = userDoc['email'] ?? '';
+          _phoneController.text = userDoc['phone'] ?? '';
+          _vehicleController.text = userDoc['vehicleNumber'] ?? '';
+          currentUserPhoto = userDoc['profilePicture']; // Fix image fetching
+        });
+      }
+    } catch (e) {
+      log("Error fetching user profile: $e");
+>>>>>>> f545e31012bc94086473cf792d9095dd619e7294
     }
   }
 }
