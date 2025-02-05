@@ -15,11 +15,12 @@ class AuthActivity {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String? phone;
-  String? address;
+  //String? address;
+  String? vehicleNumber;
   String? profilePicture;
   String? vehicle;
 
-  AuthActivity({this.phone, this.address, this.profilePicture});
+  AuthActivity({this.phone, this.profilePicture});
 
   Future<User?> registerUserWithEmailAndPassword(
       String email, String password, String username,
@@ -29,6 +30,7 @@ class AuthActivity {
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
+        //phoneNumber: phone,
       );
 
       await userCredential.user?.updateDisplayName(username);
@@ -42,12 +44,11 @@ class AuthActivity {
       await _firestore.collection('Users').doc(uniqueId).set({
         'username': username,
         'email': email,
-        'phone': phone ?? '',
-        'address': address ?? '',
-        'profilePicture': profilePicture ?? '',
-        'userId': uniqueId, // Custom Unique ID
-        'Fire_uid':
-            userCredential.user?.uid, // Firebase UID for future reference
+        'phone': phone,
+        //'address': address,
+        'profilePicture': profilePicture, // Empty at first
+        'uid': userCredential.user?.uid,
+        'userId': uniqueId,
         'createdAt': FieldValue.serverTimestamp(),
       });
 

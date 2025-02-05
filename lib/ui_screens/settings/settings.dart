@@ -46,19 +46,7 @@ class _SettingsState extends State<Settings> {
                   Navigator.pushNamed(context, '/userprofile'); // route
                 },
               ),
-              ListTile(
-                title: const Text('Notifications',
-                    style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: Colors.white)),
-                trailing:
-                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
-                onTap: () {
-                  Navigator.pushNamed(context, '/notifications'); // route
-                },
-              ),
+              
               ListTile(
                 title: const Text('Logout Account',
                     style: TextStyle(
