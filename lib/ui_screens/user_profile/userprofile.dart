@@ -1,5 +1,6 @@
 import 'dart:developer';
 //import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -17,6 +18,7 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final AuthActivity _authActivity = AuthActivity();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? currentUserPhoto; // Store base64 profile image
 
   final TextEditingController _nameController = TextEditingController();
@@ -28,7 +30,6 @@ class _UserProfileState extends State<UserProfile> {
 
   bool isEditing = false;
   User? currentUser;
-  String? currentUserPhoto; // Store base64 profile image
 
   @override
   void initState() {
