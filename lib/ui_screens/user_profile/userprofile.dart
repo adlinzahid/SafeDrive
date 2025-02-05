@@ -24,8 +24,7 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _vehicleController = TextEditingController();
   final TextEditingController _vehicleNumberController = TextEditingController();
-  //final TextEditingController _addressController = TextEditingController();
-
+  
   bool isEditing = false;
   User? currentUser;
   String? currentUserPhoto; // Store base64 profile image
@@ -300,7 +299,6 @@ class _UserProfileState extends State<UserProfile> {
         'username': name,
         'phone': phone,
         'vehicleNumber': vehicleNumber,
-        //'address': address,
       });
       print("User profile updated successfully!");
     } catch (e) {

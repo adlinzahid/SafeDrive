@@ -12,7 +12,6 @@ class AuthActivity {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String? phone;
-  //String? address;
   String? vehicleNumber;
   String? profilePicture;
 
@@ -43,7 +42,6 @@ class AuthActivity {
         'username': username,
         'email': email,
         'phone': phone,
-        //'address': address,
         'profilePicture': profilePicture, // Empty at first
         'uid': userCredential.user?.uid,
         'userId': uniqueId,
