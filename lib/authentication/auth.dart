@@ -139,46 +139,63 @@ class AuthActivity {
     return null;
   }
 
-  //Sign in with Google
   Future<UserCredential?> signInWithGoogle(BuildContext context) async {
-    //if this is the first time user signs in with Google, create a new account in the firestore to save the user data
     try {
+      // 1. Sign in with Google
       final googleUser = await GoogleSignIn().signIn();
-      final googleAuth = await googleUser?.authentication;
+      if (googleUser == null) {
+        log("Google Sign-In aborted by user");
+        return null;
+      }
+
+      final googleAuth = await googleUser.authentication;
 
       final cred = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(cred);
+      final userCredential =
+          await FirebaseAuth.instance.signInWithCredential(cred);
 
-      // Check if this is a new user
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        // Generate a unique ID for the user
-        var uuid = const Uuid();
-        String uniqueId = 'UID${uuid.v4().substring(0, 6).toUpperCase()}';
+      // 2. Get user UID from Firebase
+      String uid = userCredential.user!.uid;
+      // generate a unique ID for the user
+      var uuid = const Uuid();
+      String uniqueId = 'UID${uuid.v4().substring(0, 6).toUpperCase()}';
 
-        // Save the user data to Firestore
-        await _firestore.collection('Users').doc(uniqueId).set({
-          'username': googleUser?.displayName,
-          'email': googleUser?.email,
-          'profilePicture': googleUser?.photoUrl,
-          'uid': userCredential.user?.uid,
+      // 3. Check if user exists in Firestore
+      QuerySnapshot userQuery = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('email', isEqualTo: googleUser.email)
+          .get();
+
+      DocumentSnapshot userDoc = (userQuery.docs.isNotEmpty
+          ? userQuery.docs.first
+          : null) as DocumentSnapshot<Object?>;
+
+      if (!userDoc.exists) {
+        // New user → Save to Firestore
+        await FirebaseFirestore.instance.collection('Users').doc(uniqueId).set({
+          'username': googleUser.displayName,
+          'email': googleUser.email,
+          'profilePicture': googleUser.photoUrl,
+          'uid': uid,
           'userId': uniqueId,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        //and then create a subcollection for the user's trip data named "DriveTrips"
-        //_firestore.collection('Users').doc(uniqueId).collection('DriveTrips');
-
-        log('New user ${googleUser?.displayName} with user ID $uniqueId registered successfully');
+        log('New user ${googleUser.displayName} registered successfully');
+      } else {
+        log('User ${googleUser.displayName} already exists');
       }
 
       return userCredential;
     } catch (e) {
       log("Error signing in with Google: $e");
-      _errorSnackbar(context, "Error signing in with Google");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error signing in with Google")),
+      );
     }
     return null;
   }
