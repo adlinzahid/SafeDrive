@@ -8,8 +8,7 @@ import 'package:safe_drive/ui_screens/drivetrip/driving.dart';
 import 'package:safe_drive/ui_screens/settings/settings.dart'
     as safedrive_settings;
 // import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
-import 'package:safe_drive/ui_screens/user_profile/userprofile.dart';
+
 import 'package:safe_drive/services/drivingtracker.dart';
 
 class Homepage extends StatefulWidget {
@@ -23,10 +22,7 @@ class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     const Homecontent(),
-    const TripDetails(
-      tripId: "",
-      uniqueId: '',
-    ),
+    const TripDetails(),
     const safedrive_settings.Settings(),
   ];
 
