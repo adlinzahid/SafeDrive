@@ -143,6 +143,7 @@ class AuthActivity {
 
   //Sign in with Google
   Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+    //if this is the first time user signs in with Google, create a new account in the firestore to save the user data
     try {
       final googleUser = await GoogleSignIn().signIn();
       final googleAuth = await googleUser?.authentication;
@@ -152,9 +153,33 @@ class AuthActivity {
         idToken: googleAuth?.idToken,
       );
 
-      return await _auth.signInWithCredential(cred);
+      final userCredential = await _auth.signInWithCredential(cred);
+
+      // Check if this is a new user
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        // Generate a unique ID for the user
+        var uuid = const Uuid();
+        String uniqueId = 'UID${uuid.v4().substring(0, 6).toUpperCase()}';
+
+        // Save the user data to Firestore
+        await _firestore.collection('Users').doc(uniqueId).set({
+          'username': googleUser?.displayName,
+          'email': googleUser?.email,
+          'profilePicture': googleUser?.photoUrl,
+          'uid': userCredential.user?.uid,
+          'userId': uniqueId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        //and then create a subcollection for the user's trip data named "DriveTrips"
+        //_firestore.collection('Users').doc(uniqueId).collection('DriveTrips');
+
+        log('New user ${googleUser?.displayName} with user ID $uniqueId registered successfully');
+      }
+
+      return userCredential;
     } catch (e) {
-      log("Error signing in with Google");
+      log("Error signing in with Google: $e");
       _errorSnackbar(context, "Error signing in with Google");
     }
     return null;
