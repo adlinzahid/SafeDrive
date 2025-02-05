@@ -49,6 +49,7 @@ class _TripDetailsState extends State<TripDetails> {
       appBar: AppBar(
         title: const Text("Trip Details"),
         backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         color: Colors.deepPurple, // Set the background color to purple
