@@ -1,6 +1,7 @@
 //this is the file to  start track user's driving trip using real time database and then save to firestoreimport 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -51,7 +52,7 @@ class DrivingTracker {
         "suddenAcceleration": 0,
         "speed": 0.0,
         "distance": 0.0, // Initialize distance
-        "route": [],
+        "route": [], // Initialize route as an empty list
         "paused": false,
         "endTime": null,
         "driver": user.uid,
@@ -77,10 +78,17 @@ class DrivingTracker {
 
         _previousPosition = position;
 
-        // Save speed and distance to Realtime Database
+        // Save speed, distance, and route to Realtime Database
         _realtime!.update({
           "speed": speed,
           "distance": _totalDistance / 1000, // Convert meters to KM
+          "route": FieldValue.arrayUnion([
+            {
+              "latitude": position.latitude,
+              "longitude": position.longitude,
+              "timestamp": DateTime.now().toIso8601String(),
+            }
+          ]), // Append new position to route
         });
 
         if (speed > 80) {
@@ -92,6 +100,8 @@ class DrivingTracker {
       log('Error starting trip: $e');
     }
   }
+
+
 
   void pauseTrip() {
     final user = FirebaseAuth.instance.currentUser;
