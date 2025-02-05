@@ -12,10 +12,11 @@ class AuthActivity {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String? phone;
-  String? address;
+  //String? address;
+  String? vehicleNumber;
   String? profilePicture;
 
-  AuthActivity({this.phone, this.address, this.profilePicture});
+  AuthActivity({this.phone, this.profilePicture});
 
   //Register user account with email and password
   Future<User?> registerUserWithEmailAndPassword(
@@ -25,6 +26,7 @@ class AuthActivity {
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
+        //phoneNumber: phone,
       );
 
       await userCredential.user!.updateDisplayName(username);
@@ -41,7 +43,7 @@ class AuthActivity {
         'username': username,
         'email': email,
         'phone': phone,
-        'address': address,
+        //'address': address,
         'profilePicture': profilePicture, // Empty at first
         'uid': userCredential.user?.uid,
         'userId': uniqueId,

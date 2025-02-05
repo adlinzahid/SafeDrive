@@ -1,5 +1,5 @@
 import 'dart:developer';
-import 'package:firebase_storage/firebase_storage.dart';
+//import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -23,6 +23,7 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _vehicleController = TextEditingController();
+  final TextEditingController _vehicleNumberController = TextEditingController();
   //final TextEditingController _addressController = TextEditingController();
 
   bool isEditing = false;
@@ -41,13 +42,8 @@ class _UserProfileState extends State<UserProfile> {
       return;
     }
 
-    // Initialize text controllers with current user data
-    if (currentUser?.displayName != null) {
-      _nameController.text = currentUser!.displayName!;
-    }
-    if (currentUser?.email != null) {
-      _emailController.text = currentUser!.email!;
-    }
+    // Load user data from Firestore
+  fetchUserProfile();
   }
 
   Future<void> _updateUserData() async {
@@ -59,6 +55,7 @@ class _UserProfileState extends State<UserProfile> {
     try {
       log("Updating user profile for UID: ${currentUser!.uid}");
 
+//update user data in firestore
       await _firestore.collection('Users').doc(currentUser!.uid).update({
         'username': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -67,6 +64,9 @@ class _UserProfileState extends State<UserProfile> {
       });
 
       log("User profile updated successfully!");
+
+// Fetch updated data from Firestore and update UI
+    await fetchUserProfile();
 
       setState(() {
         isEditing = false;
@@ -300,10 +300,35 @@ class _UserProfileState extends State<UserProfile> {
         'username': name,
         'phone': phone,
         'vehicleNumber': vehicleNumber,
+        //'address': address,
       });
       print("User profile updated successfully!");
     } catch (e) {
       print("Error updating profile: $e");
     }
+
+}
+
+//fetchUserprofile
+Future<void> fetchUserProfile() async {
+  if (currentUser == null) return;
+
+  try {
+    DocumentSnapshot userDoc =
+        await _firestore.collection('Users').doc(currentUser!.uid).get();
+
+    if (userDoc.exists) {
+      setState(() {
+        _nameController.text = userDoc['username'] ?? '';
+        _emailController.text = userDoc['email'] ?? '';
+        _phoneController.text = userDoc['phone'] ?? '';  // Ensure this is fetched
+        _vehicleController.text = userDoc['vehicleNumber'] ?? ''; // Fix here
+      });
+    }
+  } catch (e) {
+    log("Error fetching user profile: $e");
   }
 }
+
+
+  }
