@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileImageService {
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> pickAndUploadImage(String userId) async {
+  Future<void> pickAndUploadImage() async {
+    final user = FirebaseAuth.instance.currentUser;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
@@ -14,11 +17,11 @@ class ProfileImageService {
       String base64Image = base64Encode(imageBytes);
 
       // Save base64 string to Firestore
-      await FirebaseFirestore.instance.collection('Users').doc(userId).update({
+      await FirebaseFirestore.instance.collection('Users').doc(user?.uid).update({
         'profilePicture': base64Image,
       });
 
-      print("Profile picture updated!");
+      log("Profile picture updated!");
     }
   }
 }
