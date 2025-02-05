@@ -30,6 +30,22 @@ class _DrivingScreenState extends State<DrivingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text("Driving Mode",
+            style: TextStyle(
+                color: Colors.yellowAccent[700],
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.bold,
+                fontSize: 25)),
+        backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: true,
+        leading: IconButton(
+          color: Colors.white,
+          icon: Icon(Icons.arrow_back_ios),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -57,7 +73,7 @@ class _DrivingScreenState extends State<DrivingScreen> {
 
   void stopTrip() {
     tripData.stopTrip(); // Stop trip logic
-    Navigator.pushNamed(context, '/tripSummary', arguments: {});
+    Navigator.of(context).pop(); // Go back to previous screen
   }
 
   void pauseTrip() {
@@ -99,8 +115,10 @@ Widget _buildButton(String text, Color color, VoidCallback onPressed) {
     style: ElevatedButton.styleFrom(
       backgroundColor: color,
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-      textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      textStyle: const TextStyle(
+          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
     ),
-    child: Text(text),
+    child: Text(text,
+        style: const TextStyle(color: Colors.white, fontFamily: 'Montserrat')),
   );
 }
