@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:safe_drive/authentication/auth.dart';
 
 class DriveTrip extends StatefulWidget {
   const DriveTrip({super.key});
@@ -16,25 +15,12 @@ class DriveTrip extends StatefulWidget {
 }
 
 class _DriveTripState extends State<DriveTrip> {
-  User? currentUser = FirebaseAuth.instance.currentUser;
-  final AuthActivity _authService = AuthActivity();
+  final user = FirebaseAuth.instance.currentUser;
   String? uniqueId;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserUniqueId();
-  }
-
-  Future<void> _fetchUserUniqueId() async {
-    if (currentUser == null) return;
-
-    String? fetchedUniqueId = await _authService.getCurrentUserUniqueId();
-    if (mounted) {
-      setState(() {
-        uniqueId = fetchedUniqueId;
-      });
-    }
   }
 
   @override
@@ -59,7 +45,7 @@ class _DriveTripState extends State<DriveTrip> {
           : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection("Users")
-                  .doc(uniqueId) // Use uniqueId as document ID
+                  .doc(user?.uid)
                   .collection("DriveTrips")
                   .orderBy("startTime", descending: true)
                   .snapshots(),
@@ -95,8 +81,7 @@ class _DriveTripState extends State<DriveTrip> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TripDetails(
-                                tripId: trip.id, uniqueId: uniqueId!),
+                            builder: (context) => TripDetails(),
                           ),
                         );
                       },
@@ -134,94 +119,137 @@ class _DriveTripState extends State<DriveTrip> {
 }
 
 class TripDetails extends StatelessWidget {
-  final String tripId;
-  final String uniqueId; // Accept uniqueId
-
-  const TripDetails({super.key, required this.tripId, required this.uniqueId});
+  const TripDetails({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(
+          child:
+              Text("User not logged in", style: TextStyle(color: Colors.white)),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-          title: const Text("Trip Summary"),
-          backgroundColor: Colors.deepPurple),
+        title: Text("Trip Summary",
+            style: TextStyle(
+                fontFamily: 'Montserrat',
+                color: Colors.yellowAccent[700],
+                fontSize: 25,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+      ),
       backgroundColor: Colors.deepPurple,
-      body: FutureBuilder<DocumentSnapshot>(
+      body: FutureBuilder<QuerySnapshot>(
         future: FirebaseFirestore.instance
             .collection("Users")
-            .doc(uniqueId) // Use uniqueId instead of Firebase UID
-            .collection("DriveTrips")
-            .doc(tripId)
+            .where("uid", isEqualTo: user.uid) // Find the correct user document
+            .limit(1)
             .get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+        builder: (context, userSnapshot) {
+          if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          var tripData = snapshot.data!.data();
-          if (tripData == null) {
+          if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
             return const Center(
-              child: Text(
-                "Trip data not found",
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
+              child: Text("User document not found",
+                  style: TextStyle(color: Colors.white)),
             );
           }
 
-          var trip = tripData as Map<String, dynamic>;
-          var route = (trip["route"] as List<dynamic>)
-              .map((point) => LatLng(point["lat"], point["lng"]))
-              .toList();
+          // Get the user's document reference
+          DocumentReference userDoc = userSnapshot.data!.docs.first.reference;
 
-          return Column(
-            children: [
-              Text("Trip Duration: ${trip["startTime"]} - ${trip["endTime"]}",
-                  style: const TextStyle(fontSize: 18, color: Colors.white)),
-              Text("Hard Brakes: ${trip["hardBrakes"]}",
-                  style: const TextStyle(fontSize: 18, color: Colors.white)),
-              Text("Sharp Turns: ${trip["sharpTurns"]}",
-                  style: const TextStyle(fontSize: 18, color: Colors.white)),
-              Text("Sudden Acceleration: ${trip["suddenAcceleration"]}",
-                  style: const TextStyle(fontSize: 18, color: Colors.white)),
-              Text("Feedback: ${trip["feedbackMessage"]}",
-                  style:
-                      TextStyle(fontSize: 18, color: Colors.yellowAccent[700])),
-              Expanded(
-                child: FlutterMap(
-                  options: MapOptions(
-                      initialCenter: route.first, minZoom: 15.0, maxZoom: 18.0),
-                  children: [
-                    TileLayer(
-                        urlTemplate:
-                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
-                    PolylineLayer(polylines: [
-                      Polyline(
-                          points: route, strokeWidth: 4.0, color: Colors.blue)
-                    ]),
-                    MarkerLayer(markers: [
-                      Marker(
-                        width: 80.0,
-                        height: 80.0,
-                        point: route.first,
-                        child: const Icon(Icons.circle,
-                            color: Colors.green, size: 40.0),
+          return FutureBuilder<DocumentSnapshot>(
+            future: userDoc.collection("DriveTrips").doc().get(),
+            builder: (context, tripSnapshot) {
+              if (tripSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!tripSnapshot.hasData || !tripSnapshot.data!.exists) {
+                return const Center(
+                  child: Text("Trip data not found",
+                      style: TextStyle(color: Colors.white)),
+                );
+              }
+
+              var tripData = tripSnapshot.data!.data() as Map<String, dynamic>;
+              var route = (tripData["route"] as List<dynamic>)
+                  .map((point) => LatLng(point["lat"], point["lng"]))
+                  .toList();
+
+              return Column(
+                children: [
+                  Text(
+                      "Trip Duration: ${tripData["startTime"]} - ${tripData["endTime"]}",
+                      style:
+                          const TextStyle(fontSize: 18, color: Colors.white)),
+                  Text("Hard Brakes: ${tripData["hardBrakes"]}",
+                      style:
+                          const TextStyle(fontSize: 18, color: Colors.white)),
+                  Text("Sharp Turns: ${tripData["sharpTurns"]}",
+                      style:
+                          const TextStyle(fontSize: 18, color: Colors.white)),
+                  Text("Sudden Acceleration: ${tripData["suddenAcceleration"]}",
+                      style:
+                          const TextStyle(fontSize: 18, color: Colors.white)),
+                  Text("Feedback: ${tripData["feedbackMessage"]}",
+                      style: TextStyle(
+                          fontSize: 18, color: Colors.yellowAccent[700])),
+                  Expanded(
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: route.first,
+                        minZoom: 15.0,
+                        maxZoom: 18.0,
                       ),
-                      Marker(
-                        width: 80.0,
-                        height: 80.0,
-                        point: route.last,
-                        child: const Icon(Icons.circle,
-                            color: Colors.red, size: 40.0),
-                      ),
-                    ]),
-                  ],
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Back"),
-              ),
-            ],
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        ),
+                        PolylineLayer(polylines: [
+                          Polyline(
+                            points: route,
+                            strokeWidth: 4.0,
+                            color: Colors.blue,
+                          )
+                        ]),
+                        MarkerLayer(markers: [
+                          Marker(
+                            width: 80.0,
+                            height: 80.0,
+                            point: route.first,
+                            child: const Icon(Icons.circle,
+                                color: Colors.green, size: 40.0),
+                          ),
+                          Marker(
+                            width: 80.0,
+                            height: 80.0,
+                            point: route.last,
+                            child: const Icon(Icons.circle,
+                                color: Colors.red, size: 40.0),
+                          ),
+                        ]),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Back"),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
