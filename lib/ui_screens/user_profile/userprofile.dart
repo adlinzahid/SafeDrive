@@ -25,10 +25,6 @@ class _UserProfileState extends State<UserProfile> {
   final TextEditingController _vehicleController = TextEditingController();
   final TextEditingController _vehicleNumberController =
       TextEditingController();
-<<<<<<< HEAD
-  //final TextEditingController _addressController = TextEditingController();
-=======
->>>>>>> f545e31012bc94086473cf792d9095dd619e7294
 
   bool isEditing = false;
   User? currentUser;
@@ -59,10 +55,7 @@ class _UserProfileState extends State<UserProfile> {
     try {
       log("Updating user profile for UID: ${currentUser!.uid}");
 
-<<<<<<< HEAD
-=======
 //update user data in firestore
->>>>>>> f545e31012bc94086473cf792d9095dd619e7294
       await _firestore.collection('Users').doc(currentUser!.uid).update({
         'username': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -72,12 +65,9 @@ class _UserProfileState extends State<UserProfile> {
 
       log("User profile updated successfully!");
 
-<<<<<<< HEAD
-=======
 // Fetch updated data from Firestore and update UI
       await fetchUserProfile();
 
->>>>>>> f545e31012bc94086473cf792d9095dd619e7294
       setState(() {
         isEditing = false;
       });
@@ -286,20 +276,6 @@ class _UserProfileState extends State<UserProfile> {
     File imageFile = File(pickedFile.path);
     List<int> imageBytes = await imageFile.readAsBytes();
     String base64Image =
-<<<<<<< HEAD
-        base64Encode(imageFile.readAsBytesSync()); // Convert to base64
-
-    try {
-      await _firestore.collection('Users').doc(currentUser!.uid).update({
-        'profilePicture': base64Image,
-      });
-
-      setState(() {
-        currentUserPhoto = base64Image; // Store image in state for UI update
-      });
-
-      _showSnackbar('Profile picture updated');
-=======
         base64Encode(imageBytes); // Convert to base64 correctly
 
     try {
@@ -323,26 +299,12 @@ class _UserProfileState extends State<UserProfile> {
 
         _showSnackbar('Profile picture updated');
       }
->>>>>>> f545e31012bc94086473cf792d9095dd619e7294
     } catch (e) {
       log('Error uploading image: $e');
       _showErrorSnackbar('Failed to update profile picture');
     }
   }
 
-<<<<<<< HEAD
-  Future<void> updateUserProfile(
-      String userId, String name, String phone, String vehicleNumber) async {
-    try {
-      await FirebaseFirestore.instance.collection('Users').doc(userId).update({
-        'username': name,
-        'phone': phone,
-        'vehicleNumber': vehicleNumber,
-      });
-      print("User profile updated successfully!");
-    } catch (e) {
-      print("Error updating profile: $e");
-=======
 //update user profile
   Future<void> updateUserProfile(
       String name, String phone, String vehicleNumber) async {
@@ -393,7 +355,6 @@ class _UserProfileState extends State<UserProfile> {
       }
     } catch (e) {
       log("Error fetching user profile: $e");
->>>>>>> f545e31012bc94086473cf792d9095dd619e7294
     }
   }
 }
