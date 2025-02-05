@@ -47,37 +47,52 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Future<void> _updateUserData() async {
-    if (currentUser == null) {
-      log("No authenticated user found.");
-      return;
-    }
+  if (currentUser == null) {
+    log("No authenticated user found.");
+    return;
+  }
 
-    try {
-      log("Updating user profile for UID: ${currentUser!.uid}");
+  try {
+    DocumentReference userRef = _firestore.collection('Users').doc(currentUser!.uid);
+    
+    log("Checking if user document exists for UID: ${currentUser!.uid}");
 
-//update user data in firestore
-      await _firestore.collection('Users').doc(currentUser!.uid).update({
+    DocumentSnapshot userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      log("User document does not exist. Creating a new one.");
+      await userRef.set({  // Create the document if it doesn't exist
+        'username': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'vehicleNumber': _vehicleController.text.trim(),
+        'profilePicture': currentUserPhoto ?? '',
+      });
+      log("User profile created successfully!");
+    } else {
+      log("Updating existing user document: ${userRef.path}");
+      await userRef.update({
         'username': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
         'vehicleNumber': _vehicleController.text.trim(),
       });
-
       log("User profile updated successfully!");
-
-// Fetch updated data from Firestore and update UI
-      await fetchUserProfile();
-
-      setState(() {
-        isEditing = false;
-      });
-
-      _showSnackbar("Profile updated successfully!");
-    } catch (e) {
-      log('Error updating profile: $e'); // Logs the exact error
-      _showErrorSnackbar("Failed to update profile. $e");
     }
+
+    // Fetch updated profile data
+    await fetchUserProfile();
+
+    setState(() {
+      isEditing = false;
+    });
+
+    _showSnackbar("Profile updated successfully!");
+  } catch (e) {
+    log('Error updating profile: $e');
+    _showErrorSnackbar("Failed to update profile. $e");
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -333,28 +348,28 @@ class _UserProfileState extends State<UserProfile> {
 
 //fetchUserprofile
   Future<void> fetchUserProfile() async {
-    if (currentUser == null) return;
+  if (currentUser == null) return;
 
-    try {
-      // Fetch the user's document based on their email
-      QuerySnapshot userQuery = await _firestore
-          .collection('Users')
-          .where('email', isEqualTo: currentUser!.email)
-          .get();
+  try {
+    DocumentReference userRef = _firestore.collection('Users').doc(currentUser!.uid);
+    DocumentSnapshot userDoc = await userRef.get();
 
-      if (userQuery.docs.isNotEmpty) {
-        DocumentSnapshot userDoc = userQuery.docs.first;
+    if (userDoc.exists) {
+      log("User document found: ${userDoc.data()}");
 
-        setState(() {
-          _nameController.text = userDoc['username'] ?? '';
-          _emailController.text = userDoc['email'] ?? '';
-          _phoneController.text = userDoc['phone'] ?? '';
-          _vehicleController.text = userDoc['vehicleNumber'] ?? '';
-          currentUserPhoto = userDoc['profilePicture']; // Fix image fetching
-        });
-      }
-    } catch (e) {
-      log("Error fetching user profile: $e");
+      setState(() {
+        _nameController.text = userDoc['username'] ?? '';
+        _emailController.text = userDoc['email'] ?? '';
+        _phoneController.text = userDoc['phone'] ?? '';
+        _vehicleController.text = userDoc['vehicleNumber'] ?? '';
+        currentUserPhoto = userDoc['profilePicture'] ?? '';
+      });
+    } else {
+      log("No user document found for UID: ${currentUser!.uid}");
     }
+  } catch (e) {
+    log("Error fetching user profile: $e");
   }
+}
+
 }
