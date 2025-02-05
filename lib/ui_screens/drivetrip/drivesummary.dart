@@ -1,4 +1,4 @@
-//displaying the trip history of the user
+// Displaying the trip history of the user
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:safe_drive/authentication/auth.dart';
 
 class DriveTrip extends StatefulWidget {
   const DriveTrip({super.key});
@@ -16,6 +17,25 @@ class DriveTrip extends StatefulWidget {
 
 class _DriveTripState extends State<DriveTrip> {
   User? currentUser = FirebaseAuth.instance.currentUser;
+  final AuthActivity _authService = AuthActivity();
+  String? uniqueId;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserUniqueId();
+  }
+
+  Future<void> _fetchUserUniqueId() async {
+    if (currentUser == null) return;
+
+    String? fetchedUniqueId = await _authService.getCurrentUserUniqueId();
+    if (mounted) {
+      setState(() {
+        uniqueId = fetchedUniqueId;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,89 +52,95 @@ class _DriveTripState extends State<DriveTrip> {
         ),
         backgroundColor: Colors.deepPurple,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection("Users")
-            .doc(currentUser!.uid)
-            .collection("DriveTrips")
-            .orderBy("startTime", descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          var trips = snapshot.data!.docs;
-          if (trips.isEmpty) {
-            return Center(
-              child: Text(
-                "No trip history available",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            itemCount: trips.length,
-            itemBuilder: (context, index) {
-              var trip = trips[index];
-              DateTime startTime = DateTime.parse(trip["startTime"]);
-              String formattedDate =
-                  DateFormat('yyyy-MM-dd HH:mm').format(startTime);
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TripDetails(tripId: trip.id),
-                    ),
-                  );
-                },
-                child: Card(
-                  color: Colors.deepPurple[200],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child:
-                          Icon(Icons.directions_car, color: Colors.deepPurple),
-                    ),
-                    title: Text(
-                      "Trip on $formattedDate",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
+      body: uniqueId == null
+          ? const Center(
+              child:
+                  CircularProgressIndicator()) // Show loading until uniqueId is available
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection("Users")
+                  .doc(uniqueId) // Use uniqueId as document ID
+                  .collection("DriveTrips")
+                  .orderBy("startTime", descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "No trip history available",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontFamily: 'Montserrat',
                       ),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios,
-                        size: 18, color: Colors.yellowAccent[700]),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                  );
+                }
+
+                var trips = snapshot.data!.docs;
+
+                return ListView.builder(
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    var trip = trips[index];
+                    DateTime startTime = DateTime.parse(trip["startTime"]);
+                    String formattedDate =
+                        DateFormat('yyyy-MM-dd HH:mm').format(startTime);
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TripDetails(
+                                tripId: trip.id, uniqueId: uniqueId!),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: Colors.deepPurple[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        elevation: 3,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Icon(Icons.directions_car,
+                                color: Colors.deepPurple),
+                          ),
+                          title: Text(
+                            "Trip on $formattedDate",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios,
+                              size: 18, color: Colors.yellowAccent[700]),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }
 
 class TripDetails extends StatelessWidget {
   final String tripId;
-  const TripDetails({super.key, required this.tripId});
+  final String uniqueId; // Accept uniqueId
+
+  const TripDetails({super.key, required this.tripId, required this.uniqueId});
 
   @override
   Widget build(BuildContext context) {
-    User? currentUser = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
           title: const Text("Trip Summary"),
@@ -123,16 +149,26 @@ class TripDetails extends StatelessWidget {
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
             .collection("Users")
-            .doc(currentUser!.uid)
+            .doc(uniqueId) // Use uniqueId instead of Firebase UID
             .collection("DriveTrips")
             .doc(tripId)
             .get(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
-          var trip = snapshot.data!.data() as Map<String, dynamic>;
+          var tripData = snapshot.data!.data();
+          if (tripData == null) {
+            return const Center(
+              child: Text(
+                "Trip data not found",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            );
+          }
+
+          var trip = tripData as Map<String, dynamic>;
           var route = (trip["route"] as List<dynamic>)
               .map((point) => LatLng(point["lat"], point["lng"]))
               .toList();
@@ -140,13 +176,13 @@ class TripDetails extends StatelessWidget {
           return Column(
             children: [
               Text("Trip Duration: ${trip["startTime"]} - ${trip["endTime"]}",
-                  style: TextStyle(fontSize: 18, color: Colors.white)),
+                  style: const TextStyle(fontSize: 18, color: Colors.white)),
               Text("Hard Brakes: ${trip["hardBrakes"]}",
-                  style: TextStyle(fontSize: 18, color: Colors.white)),
+                  style: const TextStyle(fontSize: 18, color: Colors.white)),
               Text("Sharp Turns: ${trip["sharpTurns"]}",
-                  style: TextStyle(fontSize: 18, color: Colors.white)),
+                  style: const TextStyle(fontSize: 18, color: Colors.white)),
               Text("Sudden Acceleration: ${trip["suddenAcceleration"]}",
-                  style: TextStyle(fontSize: 18, color: Colors.white)),
+                  style: const TextStyle(fontSize: 18, color: Colors.white)),
               Text("Feedback: ${trip["feedbackMessage"]}",
                   style:
                       TextStyle(fontSize: 18, color: Colors.yellowAccent[700])),
@@ -183,7 +219,7 @@ class TripDetails extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text("Back"),
+                child: const Text("Back"),
               ),
             ],
           );
