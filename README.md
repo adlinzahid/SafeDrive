@@ -24,13 +24,13 @@ SafeDrive will be deployed on Google Playstore. Phone compatibility; all Android
 
 | **Name**                             | **Matric No** | **Assigned Tasks**                                                                                                                                               |
 |--------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Nur Adlin Binti Muhammad Zahid**   | 2118652       | - Authentication and profile management.                                                                                                                         |
+| **Nur Adlin Binti Muhammad Zahid**   | 2118652       | - Authentication and designing the UI signin/register page                                                                                                                         |
 |                                      |               | - Sensor integration for accelerometer/gyroscope.                                                                                        |
 |                                      |               | - Backend logic for CRUD operations.                                                                                                                             |
 | **Hannah Sabrina Binti Saiful Bahri**| 2116074       | - UI/UX design for all app screens.                                                                                                                              |
 |                                      |               | - Development of trip logging and review interfaces.                                                                                                             |
-|                                      |               | - Visualization of driving data (e.g., graphs and charts).                                                                                                       |
-| **Nor Hidayati Binti Munadi**        | 2214282       | - Integration of GPS for route mapping and safe-driving analysis                                                                                                              |
+|                                      |               | - Integration of GPS for route mapping and safe-driving analysis                                                                                                        |
+| **Nor Hidayati Binti Munadi**        | 2214282       | - CRUD for profile management and designing the UI for user profile                                                                                                         |
 |                                      |               | - Detection algorithms for unsafe driving behaviors.                                                                                                             |
 |                                      |               | - Implementation of notifications and alerts for risky habits.                                                                                                   |
 
