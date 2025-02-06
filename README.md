@@ -158,6 +158,7 @@ We would like to acknowledge the use of ChatGPT, an AI language model developed 
 ## References
 - OpenAI. (n.d.). ChatGPT [Computer software]. Retrieved from https://openai.com/chatgpt
 - Animation: "Free Car Driving Animation" by Sam Rossi from LottieFiles (https://lottiefiles.com)
+- Microsoft CoPilot. (n.d.). Github CoPilot. Retrieved from https://copilot.microsoft.com
 
 
 
